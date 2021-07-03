@@ -1,17 +1,15 @@
 <template>
-  <aside class="nav">
-    <ul class="nav-list">
-      <li
-        class="nav-item flex-center"
-        v-for="(nav, index) in navList"
-        :key="index"
-        :class="{ active: nav.isActive }"
-        @click="navClick(nav)"
-      >
-        {{ nav.name }}
-      </li>
-    </ul>
-  </aside>
+  <div class="nav">
+    <div
+      class="nav-item flex-center"
+      v-for="(nav, index) in navList"
+      :key="index"
+      :class="{ active: nav.isActive }"
+      @click="navClick(nav)"
+    >
+      {{ nav.name }}
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -25,29 +23,16 @@ export default defineComponent({
   setup() {
     const router = useRouter()
 
+    const navList: NavItem[] = []
     const reactiveData = reactive({
-      navList: [
-        {
-          name: 'Home',
-          isActive: false,
-          path: '/'
-        },
-        {
-          name: 'Vuex',
-          isActive: false,
-          path: '/vuex'
-        },
-        {
-          name: 'Axios',
-          isActive: false,
-          path: '/axios'
-        },
-        {
-          name: 'Test',
-          isActive: false,
-          path: '/test'
-        }
-      ],
+      // navList: [
+      //   {
+      //     name: 'Home',
+      //     isActive: false,
+      //     path: '/'
+      //   }
+      // ],
+      navList,
 
       navClick(e: NavItem) {
         router.push(e.path)
@@ -73,6 +58,16 @@ export default defineComponent({
       router.isReady().then(() => {
         changeNavActive(router.currentRoute.value.path)
       })
+
+      // console.error(router.getRoutes())
+      const routes = router.getRoutes()
+      routes.forEach((e) => {
+        reactiveData.navList.push({
+          name: String(e.name),
+          isActive: false,
+          path: e.path
+        })
+      })
     })
 
     return {
@@ -82,33 +77,26 @@ export default defineComponent({
 })
 </script>
 
-<style scoped lang="stylus">
-
-@import "../style/basic.styl"
-
+<style scoped lang="scss">
 .nav {
-  position relative
-  width 100%
-  height 100%
-  box-sizing border-box
-  background: #fff
+  background: #3333;
 
-  .nav-list {
+  display: flex;
+  flex-direction: column;
 
-    .nav-item {
-      box-sizing border-box
-      width 100%
-      height 60px
-      cursor pointer
+  .nav-item {
+    margin: 5px;
+    background: #3333;
 
-      &.active {
-        font-weight bold
-        background $second-background-color
-      }
+    cursor: pointer;
 
+    &:hover {
+      background: red;
     }
 
+    &.active {
+      background: red;
+    }
   }
-
 }
 </style>

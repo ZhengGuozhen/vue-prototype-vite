@@ -1,105 +1,66 @@
 <template>
-  <main class="main-container">
-    <div class="top">
-      <Header />
+  <main class="c-0">
+    <div class="navi-button" @click="showNav = !showNav">菜单</div>
+    <div v-show="showNav" class="navi">
+      <Nav />
     </div>
 
-    <div class="bottom">
-      <div class="left">
-        <Nav />
-      </div>
-
-      <div class="right">
-        <div class="content">
-          <router-view />
-        </div>
-      </div>
+    <div class="content">
+      <router-view />
     </div>
   </main>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import Header from '@/components/Header.vue'
 import Nav from '@/components/Nav.vue'
 
 export default defineComponent({
   name: 'Main',
   components: {
-    Header,
     Nav
+  },
+  data() {
+    return {
+      showNav: true
+    }
   }
 })
 </script>
 
-<style scoped lang="stylus">
+<style scoped lang="scss">
+.c-0 {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 
-@import "../style/basic.styl"
+  .navi-button {
+    position: absolute;
+    z-index: 999;
+    top: 10px;
+    left: 10px;
+    background: #3333;
 
-$top-height = 60px
-$left-side-width = 80px
+    cursor: pointer;
 
-.main-container {
-  position absolute
-  left 0
-  right 0
-  top 0
-  bottom 0
-  width 100%
-  height 100%
-  background $second-background-color
-  box-sizing border-box
-  display flex
-  flex-direction column
-  justify-content space-between
-
-  .top {
-    position relative
-    box-sizing border-box
-    width 100%
-    height $top-height
-    margin-bottom 10px
-  }
-
-  .bottom {
-    position relative
-    box-sizing border-box
-    width 100%
-    height 100%
-    display flex
-    justify-content space-between
-
-    .left {
-      position relative
-      width $left-side-width
-      height 100%
-      box-sizing border-box
-    }
-
-    .right {
-      position relative
-      width 100%
-      height 100%
-      box-sizing border-box
-      padding 0 10px 10px 10px
-
-      .content {
-        position relative
-        width 100%
-        height 100%
-        background $background-color
-        border-radius 5px
-        box-sizing border-box
-        padding 10px
-      }
+    &:hover {
+      background: red;
     }
   }
-}
+  .navi {
+    position: absolute;
+    z-index: 999;
+    top: 50px;
+    left: 0px;
+  }
 
-.page-links {
-  a {
-    font-weight: bold;
-    margin: 0 20px;
+  .content {
+    height: 100%;
+    width: 100%;
+
+    // padding-left: 150px;
   }
 }
 </style>
