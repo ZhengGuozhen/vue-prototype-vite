@@ -59,8 +59,6 @@ export default defineComponent({
   .content {
     height: 100%;
     width: 100%;
-
-    // padding-left: 150px;
   }
 }
 </style>
