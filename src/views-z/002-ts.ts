@@ -7,6 +7,6 @@
 const a = {
   a: 10
 }
-console.log(a)
+// console.log(a)
 
 export default a

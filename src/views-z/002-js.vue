@@ -51,7 +51,7 @@ export default {
   watch: {},
   created() {
     a.a = 1
-    console.log('002-js', a)
+    // console.log('002-js', a)
   },
   mounted() {},
   methods: {
