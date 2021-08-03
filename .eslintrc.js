@@ -1,34 +1,25 @@
 module.exports = {
-  env: {
-    browser: true,
-    es2021: true,
-    node: true
-  },
   extends: [
-    'plugin:vue/essential',
-    'airbnb-base',
-    'plugin:prettier/recommended',
-    'plugin:jest/recommended'
+    'alloy',
+    'alloy/vue',
+    // 'alloy/typescript',
+    // 'plugin:prettier/recommended'
   ],
-  parserOptions: {
-    ecmaVersion: 12,
-    parser: '@typescript-eslint/parser',
-    sourceType: 'module'
+  env: {
+    // 你的环境变量（包含多个预定义的全局变量）
+    //
+    // browser: true,
+    // node: true,
+    // mocha: true,
+    // jest: true,
+    // jquery: true
   },
-  plugins: ['vue', '@typescript-eslint'],
+  globals: {
+    // 你的全局变量（设置为 false 表示它不允许被重新赋值）
+    //
+    // myGlobal: false
+  },
   rules: {
-    'import/no-unresolved': 'off',
-    'import/extensions': 'off',
-    'import/no-absolute-path': 'off',
-    'import/no-extraneous-dependencies': 'off',
-    'vue/no-multiple-template-root': 'off',
-    'no-param-reassign': [
-      'error',
-      {
-        props: true,
-        ignorePropertyModificationsFor: ['state', 'config']
-      }
-    ]
-  },
-  settings: {}
+    // 自定义你的规则
+  }
 }
