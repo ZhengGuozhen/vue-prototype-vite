@@ -12,7 +12,8 @@ export default defineConfig({
       '@': resolve(__dirname, 'src') // 设置 `@` 指向 `src` 目录
     }
   },
-  base: './', // 设置打包路径
+  // base: './', // 设置打包路径
+  base: '/zgz/', // 设置打包路径
   server: {
     port: 4500, // 设置服务启动端口号
     open: true, // 设置服务启动时是否自动打开浏览器
@@ -27,5 +28,14 @@ export default defineConfig({
     //     rewrite: (path) => path.replace('/api/', '/')
     //   }
     // },
-  }
+  },
+  build: {
+    outDir: 'dist/zgz',
+    terserOptions: {
+      compress: {
+        // Used to delete console in production environment
+        drop_console: true,
+      },
+    },
+  },
 })
