@@ -40,7 +40,7 @@ export default defineComponent({
     position: absolute;
     z-index: 999;
     top: 10px;
-    left: 10px;
+    right: 10px;
     background: #3333;
 
     cursor: pointer;
@@ -52,8 +52,10 @@ export default defineComponent({
   .navi {
     position: absolute;
     z-index: 999;
-    top: 50px;
-    left: 0px;
+    top: 10vh;
+    right: 10px;
+    max-height: 80vh;
+    overflow: auto;
   }
 
   .content {

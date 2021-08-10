@@ -85,7 +85,7 @@ export default defineComponent({
   flex-direction: column;
 
   .nav-item {
-    margin: 5px;
+    margin: 2px;
     background: #3333;
 
     cursor: pointer;

@@ -11,5 +11,7 @@ import 'vxe-table/lib/style.css'
 
 import App from './App.vue'
 
+import '@/style/tailwind.css';
+
 const app = createApp(App)
 app.use(ElementPlus).use(VXETable).use(router).use(store, key).mount('#app')

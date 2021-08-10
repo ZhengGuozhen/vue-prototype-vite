@@ -1,0 +1,19 @@
+/*! @import */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* @zgz 添加基础样式 */
+@layer base {
+  .border-d {
+    @apply border-2 border-red-500;
+  }
+
+  .w-h-full {
+    @apply w-full h-full;
+  }
+
+  .w-h-screen {
+    @apply w-screen h-screen;
+  }
+}
