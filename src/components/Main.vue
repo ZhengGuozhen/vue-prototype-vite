@@ -22,7 +22,7 @@ export default defineComponent({
   },
   data() {
     return {
-      showNav: true
+      showNav: false
     }
   }
 })
