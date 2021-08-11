@@ -113,12 +113,11 @@ class World {
 
         // camera 事件
         let that = this
-        this.cesium.viewer.camera.percentageChanged = 0.1
+        this.cesium.viewer.camera.percentageChanged = 0.01
         this.cesium.viewer.camera.changed.addEventListener(() => {
             // Gets the event that will be raised when the camera has changed by percentageChanged
             // console.log('camera changed')
             that.timerRender()
-            that.cameraChanged()
         })
         this.cesium.viewer.camera.moveStart.addEventListener(() => {
             // console.log('camera moveStart')
@@ -159,6 +158,10 @@ class World {
             console.log('屏幕转世界坐标', cartesian3)
 
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        handler.setInputAction((event) => {
+            that.resizeObjects()
+        }, Cesium.ScreenSpaceEventType.WHEEL);
     }
 
     flyTo(longitude, latitude, height) {
@@ -172,26 +175,6 @@ class World {
             // },
             duration: 3
         })
-    }
-
-    cameraChanged() {
-        this.resizeObjects()
-    }
-
-    resizeObjects() {
-        console.time('resizeObjects')
-
-        const factor = 4000000
-
-        this.three.scene.traverseVisible(o => {
-            if (o.__config && o.__config.fixedSize) {
-                let v = new THREE.Vector3();
-                let scale = v.subVectors(o.position, this.three.camera.position).length() / factor;
-                o.scale.set(scale, scale, scale);
-            }
-        })
-
-        console.timeEnd('resizeObjects')
     }
     // ======================================
 
@@ -346,6 +329,48 @@ class World {
         this.dqObjects(this.demoObjects)
 
     }
+
+    resizeObjects() {
+        console.time('resizeObjects')
+
+        const factor = 0.1
+
+        let cameraHeight = 1
+        let mode = this.cesium.viewer.scene.mode
+        if (mode === Cesium.SceneMode.SCENE3D) {
+            // cemera 高度，两种方法
+            // let ellipsoid = this.cesium.viewer.scene.globe.ellipsoid;
+            // let cameraHeight = ellipsoid.cartesianToCartographic(this.cesium.viewer.camera.position).height;
+            let cartographic = Cesium.Cartographic.fromCartesian(this.cesium.viewer.camera.position)
+            cameraHeight = cartographic.height
+
+        } else if (mode === Cesium.SceneMode.COLUMBUS_VIEW) {
+            cameraHeight = this.cesium.viewer.camera.position.z
+        }
+
+        this.three.scene.traverseVisible(o => {
+
+            if (o.__config && o.__config.fixedSize) {
+                // 计算 object 相对于 camera 的 position
+                // 由于直接修改了 cemare 的矩阵，camera.position 不正确，此法不可用
+                // let v = new THREE.Vector3();
+                // let distanceToCamera = v.subVectors(o.position, this.three.camera.position).length()
+
+                // 计算 object 相对于 camera 的 position，可用
+                // let m = new THREE.Matrix4()
+                // m.multiplyMatrices( this.three.camera.matrixWorldInverse, o.matrixWorld );
+                // let position = new THREE.Vector3();
+                // position.setFromMatrixPosition(m)
+                // let distanceToCamera = position.length()
+
+                let scale = cameraHeight * factor;
+                o.scale.set(scale, scale, scale);
+            }
+
+        })
+
+        console.timeEnd('resizeObjects')
+    }
     // ======================================
 
     // ======================================
@@ -390,6 +415,9 @@ class World {
         }
         console.timeEnd('新建object')
 
+        this.resizeObjects()
+        this.timerRender()
+
     }
 
     addThreeObject(data) {
@@ -410,10 +438,10 @@ class World {
         }
 
         // 圆锥
-        let geometry = new THREE.ConeBufferGeometry(1, 3, 32)
+        let geometry = new THREE.ConeBufferGeometry(1, 2, 32)
         let material = new THREE.MeshNormalMaterial()
         let Object0 = new THREE.Mesh(geometry, material);
-        Object0.scale.set(5000, 5000, 5000);
+        Object0.scale.set(1, 1, 1);
         group.add(Object0)
 
         // 平面
@@ -424,13 +452,13 @@ class World {
             opacity: 0.1,
         });
         let icon = new THREE.Mesh(geometry, material);
-        icon.scale.set(10000, 10000, 10000);
+        icon.scale.set(1, 1, 1);
         group.add(icon)
 
         // 坐标轴
-        group.add(new THREE.AxesHelper(1e5))
+        group.add(new THREE.AxesHelper(2))
         // 网格
-        group.add(new THREE.GridHelper(10000, 10))
+        group.add(new THREE.GridHelper(2, 10))
 
         // tip
         this.addThreeObjectTip(group)
