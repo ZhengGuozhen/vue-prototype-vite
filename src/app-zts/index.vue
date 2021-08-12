@@ -5,8 +5,8 @@
       ref="rootContainer"
       class="absolute w-h-screen overflow-hidden"
     ></div>
-    <div class="absolute border-d flex">
-      <div class="m-2 border-d" @click="func_1">tip显隐藏</div>
+    <div class="absolute top-10 border-d flex">
+      <div class="m-2 border-d" @click="func_1">tip显隐</div>
       <div class="m-2 border-d" @click="func_2">3d/2d</div>
     </div>
   </div>
@@ -19,33 +19,40 @@ import { defineComponent, onMounted, ref } from 'vue'
 // produciton  情况下：无此问题
 import '@/../node_modules/cesium/Build/Cesium/Widgets/widgets.css'
 
-import World from './core/world.js'
+import Demo from './examples/Demo.js'
 
 export default defineComponent({
   name: 'CesiumDemo',
 
   setup() {
     const rootContainer = ref(null)
+    let zts = null
 
     onMounted(() => {
       const el = rootContainer.value
-      const world = World.getInstance()
-      world.init(el)
-      world.addTestObjects()
+      zts = new Demo(el)
     })
 
     function func_1(e) {
+      
+      if (e.target.__state === undefined) {
+        e.target.__state = true
+      }
+
       if (!e.target.__state) {
         e.target.__state = true
-        World.getInstance().restoreTipAll()
+        zts.BaseObject.__restoreCssTipAll()
       } else {
         e.target.__state = false
-        World.getInstance().removeTipAll()
+        zts.BaseObject.__removeCssTipAll()
       }
+
+      zts.world.timerRender()
+      
     }
 
     function func_2(e) {
-      World.getInstance().changeView('3d')
+      zts.world.changeView('3d')
     }
 
     return { rootContainer, func_1, func_2 }

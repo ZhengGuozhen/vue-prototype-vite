@@ -1,10 +1,11 @@
 import * as THREE from 'three/build/three.module.js'
-// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import {
     CSS2DRenderer,
-    CSS2DObject
+    // CSS2DObject
 } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
-import { jsPlumb } from 'jsplumb'
+import Stats from 'three/examples/jsm/libs/stats.module.js';
+// import { jsPlumb } from 'jsplumb'
+// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 // import { v4 as uuidv4 } from 'uuid'
 
 import * as Cesium from 'cesium'
@@ -12,15 +13,19 @@ import * as Cesium from 'cesium'
 class World {
 
     constructor() {
+
         this.three = {
             renderer: null,
             renderer2: null,
             camera: null,
-            scene: null
+            scene: null,
+            stats: new Stats()
         }
+
         this.cesium = {
             viewer: null
         }
+
         this.cesiumContainer = null
         this.threeContainer = null
 
@@ -30,7 +35,13 @@ class World {
 
         this.defaultPosition = [114.43, 30.41, 100000]
 
-        this.demoObjects = []
+        // event
+        this.event_view_changed = new CustomEvent('event_view_changed', {
+            detail: {
+                mode: null
+            }
+        });
+
     }
 
     static instance = null
@@ -43,9 +54,11 @@ class World {
     }
 
     init(el) {
+
         this.cesiumContainer = document.createElement('div')
         this.cesiumContainer.className = 'absolute w-h-screen'
         el.appendChild(this.cesiumContainer)
+
         this.threeContainer = document.createElement('div')
         this.threeContainer.className = 'absolute w-h-screen pointer-events-none'
         el.appendChild(this.threeContainer)
@@ -53,12 +66,18 @@ class World {
         this.initCesium()
         this.initThree()
 
+        this.three.stats.dom.style.pointerEvents = 'auto'
+        this.threeContainer.appendChild(this.three.stats.dom)
+
         let that = this
         let loop = function () {
             requestAnimationFrame(loop);
             that.render();
+            that.three.stats.update();
         }
         loop()
+
+        this.three.scene.add(new THREE.AxesHelper(1e7));
 
     }
 
@@ -126,6 +145,9 @@ class World {
         this.cesium.viewer.camera.moveEnd.addEventListener(() => {
             // console.log('camera moveEnd')
             that.timerRender()
+
+            that.resizeObjects()
+
         })
 
         // 鼠标事件
@@ -198,7 +220,10 @@ class World {
         this.three.camera.updateProjectionMatrix()
 
         // renderer1
-        this.three.renderer = new THREE.WebGLRenderer({ alpha: true })
+        this.three.renderer = new THREE.WebGLRenderer({
+            alpha: true,
+            logarithmicDepthBuffer: true
+        })
         this.three.renderer.setSize(width, height)
         this.threeContainer.appendChild(this.three.renderer.domElement)
 
@@ -275,38 +300,6 @@ class World {
         }, time)
     }
 
-    dqObject(o, pos) {
-        let mode = this.cesium.viewer.scene.mode
-
-        if (mode === Cesium.SceneMode.SCENE3D) {
-
-            let pos_ = Cesium.Cartesian3.fromDegrees(...pos);
-
-            o.position.set(pos_.x, pos_.y, pos_.z)
-            o.up.set(0, 0, -6378137)
-            o.lookAt(new THREE.Vector3(0, 0, 0));
-            o.rotateX(-Math.PI / 2)
-
-        } else if (mode === Cesium.SceneMode.COLUMBUS_VIEW) {
-
-            let p = this.cesium.viewer.scene.mapProjection.project(
-                new Cesium.Cartographic(
-                    (pos[0] * Math.PI) / 180,
-                    (pos[1] * Math.PI) / 180,
-                    pos[2]
-                )
-            )
-
-            o.position.set(p.z, p.x, p.y)
-            o.rotation.set(0, Math.PI, Math.PI / 2)
-
-        }
-    }
-    dqObjects(obejcts) {
-        obejcts.forEach(o => {
-            this.dqObject(o, o.__data.position)
-        })
-    }
 
     changeView() {
 
@@ -326,12 +319,16 @@ class World {
 
         }
 
-        this.dqObjects(this.demoObjects)
+        // 
+        this.event_view_changed.detail.mode = viewer.scene.mode
+        window.dispatchEvent(this.event_view_changed)
 
     }
 
-    resizeObjects() {
-        console.time('resizeObjects')
+    resizeObjects(object) {
+
+        let o
+        object ? o = object : o = this.three.scene
 
         const factor = 0.1
 
@@ -348,205 +345,51 @@ class World {
             cameraHeight = this.cesium.viewer.camera.position.z
         }
 
-        this.three.scene.traverseVisible(o => {
+        console.time('resizeObjects cameraHeight:' + cameraHeight)
 
-            if (o.__config && o.__config.fixedSize) {
+        o.traverseVisible(o => {
+
+            if (
+                o.__data &&
+                o.__data.config &&
+                o.__data.config.fixedSize
+            ) {
                 // 计算 object 相对于 camera 的 position
                 // 由于直接修改了 cemare 的矩阵，camera.position 不正确，此法不可用
                 // let v = new THREE.Vector3();
                 // let distanceToCamera = v.subVectors(o.position, this.three.camera.position).length()
 
-                // 计算 object 相对于 camera 的 position，可用
+                // 计算 object 相对于 camera 的 position，可用，较慢
                 // let m = new THREE.Matrix4()
-                // m.multiplyMatrices( this.three.camera.matrixWorldInverse, o.matrixWorld );
+                // m.multiplyMatrices(this.three.camera.matrixWorldInverse, o.matrixWorld);
                 // let position = new THREE.Vector3();
                 // position.setFromMatrixPosition(m)
                 // let distanceToCamera = position.length()
+                // let scale = distanceToCamera * factor;
+                // o.scale.set(scale, scale, scale);
 
-                let scale = cameraHeight * factor;
+                // 计算 object 相对于 camera 的 position，可用，较快
+                let cameraPos = this.cesium.viewer.camera.position
+                let cameraPos_ = new THREE.Vector3(cameraPos.x, cameraPos.y, cameraPos.z)
+                let v = new THREE.Vector3();
+                let distanceToCamera = v.subVectors(
+                    o.position, cameraPos_).length()
+                let scale = distanceToCamera * factor;
                 o.scale.set(scale, scale, scale);
+
+                todo 应该计算 object 到 camera 平面的距离
+
+                // let scale = cameraHeight * factor;
+                // o.scale.set(scale, scale, scale);
             }
 
         })
 
-        console.timeEnd('resizeObjects')
+        console.timeEnd('resizeObjects cameraHeight:' + cameraHeight)
+
     }
     // ======================================
 
-    // ======================================
-    addTestObjects() {
-
-        // Cesium entity
-        const entity = {
-            name: 'Polygon',
-            polygon: {
-                hierarchy: Cesium.Cartesian3.fromDegreesArray([
-                    this.defaultPosition[0] - 1, this.defaultPosition[1] - 1,
-                    this.defaultPosition[0] + 1, this.defaultPosition[1] - 1,
-                    this.defaultPosition[0] + 1, this.defaultPosition[1] + 1,
-                    this.defaultPosition[0] - 1, this.defaultPosition[1] + 1,
-                ]),
-                material: Cesium.Color.RED.withAlpha(0.2)
-            }
-        };
-        this.cesium.viewer.entities.add(entity);
-
-        // 地心坐标轴
-        this.three.scene.add(new THREE.AxesHelper(1e7));
-
-        // 添加一个 object
-        let o = this.addThreeObject({
-            position: [114, 30, 0]
-        })
-        this.renderThree()
-        this.addThreeObjectTipConn(o)
-
-        // 添加多个 object
-        console.time('新建object')
-        for (let i = 0; i < 10; i++) {
-            let o = this.addThreeObject({
-                position: [114 + i / 5, 30, 0]
-            })
-            this.demoObjects.push(o)
-        }
-        this.renderThree()
-        for (let o of this.demoObjects) {
-            this.addThreeObjectTipConn(o)
-        }
-        console.timeEnd('新建object')
-
-        this.resizeObjects()
-        this.timerRender()
-
-    }
-
-    addThreeObject(data) {
-
-        let group = new THREE.Group();
-        this.three.scene.add(group);
-
-        // 数据
-        let defaultData = {
-            position: [114, 30, 0]
-        }
-        group.__data = defaultData
-        Object.assign(group.__data, data)
-
-        // 配置
-        group.__config = {
-            fixedSize: true
-        }
-
-        // 圆锥
-        let geometry = new THREE.ConeBufferGeometry(1, 2, 32)
-        let material = new THREE.MeshNormalMaterial()
-        let Object0 = new THREE.Mesh(geometry, material);
-        Object0.scale.set(1, 1, 1);
-        group.add(Object0)
-
-        // 平面
-        geometry = new THREE.PlaneBufferGeometry(1, 1)
-        geometry.rotateX(- Math.PI / 2)
-        material = new THREE.MeshBasicMaterial({
-            color: 0xff0000,
-            opacity: 0.1,
-        });
-        let icon = new THREE.Mesh(geometry, material);
-        icon.scale.set(1, 1, 1);
-        group.add(icon)
-
-        // 坐标轴
-        group.add(new THREE.AxesHelper(2))
-        // 网格
-        group.add(new THREE.GridHelper(2, 10))
-
-        // tip
-        this.addThreeObjectTip(group)
-
-        this.dqObject(group, group.__data.position)
-
-        return group
-
-    }
-    addThreeObjectTip(o) {
-
-        // 
-        const tipWrapper = document.createElement('div')
-        tipWrapper.textContent = ''
-        tipWrapper.style = `
-pointer-events: none;
-height: 0;
-width: 0;
-`
-        // 
-        const tipMain = document.createElement('div')
-        tipMain.textContent = 'tipMain'
-        tipMain.style = `
-pointer-events: auto;
-position: absolute;
-left: 50px;
-bottom: 50px;
-height: 30px;
-width: 60px;
-border: solid red 1px;
-cursor: pointer;
-`
-        tipWrapper.appendChild(tipMain)
-
-        // 
-        const tipObject = new CSS2DObject(tipWrapper)
-        tipObject.position.set(0, 0, 0)
-        o.add(tipObject)
-
-        // 
-        tipMain.addEventListener('contextmenu', (e) => {
-            console.error(e)
-            e.preventDefault()
-        })
-
-        // 
-        if (!o.__tip) {
-            o.__tip = {}
-        }
-        o.__tip.tipWrapper = tipWrapper
-        o.__tip.tipMain = tipMain
-        o.__tip.tipObject = tipObject
-
-    }
-    addThreeObjectTipConn(o) {
-
-        // 需要 render 一下，或者 document.body.appendChild(tipWrapper) 后面才能 plumbIns.connect
-        // this.renderThree()
-
-        let source = o.__tip.tipMain
-        let target = o.__tip.tipWrapper
-
-        const plumbIns = jsPlumb.getInstance()
-        plumbIns.draggable(source)
-        let conn = plumbIns.connect({
-            source: source,
-            target: target,
-            paintStyle: { stroke: 'red', strokeWidth: 1, dashstyle: '3' },
-            endpoint: "Blank",
-            anchor: ["Center"],
-            connector: ["Straight"],
-        });
-
-        source.__conn = conn
-
-    }
-
-    removeTipAll() {
-        this.demoObjects.forEach(o => {
-            o.remove(o.__tip.tipObject)
-        })
-    }
-    restoreTipAll() {
-        this.demoObjects.forEach(o => {
-            o.add(o.__tip.tipObject)
-        })
-    }
-    // ======================================
 
 }
 
