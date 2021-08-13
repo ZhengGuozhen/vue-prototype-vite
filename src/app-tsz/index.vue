@@ -24,11 +24,11 @@ export default defineComponent({
 
   setup() {
     const rootContainer = ref(null)
-    let zts = null
+    let tsz = null
 
     onMounted(() => {
       const el = rootContainer.value
-      zts = new Demo(el)
+      tsz = new Demo(el)
     })
 
     let test = {
@@ -39,13 +39,13 @@ export default defineComponent({
 
         if (!e.target.__state) {
           e.target.__state = true
-          zts.BaseObjectHub.restoreAll()
+          tsz.BaseObjectHub.restoreAll()
         } else {
           e.target.__state = false
-          zts.BaseObjectHub.removeAll()
+          tsz.BaseObjectHub.removeAll()
         }
 
-        zts.world.timerRender()
+        tsz.world.timerRender()
       },
       f2: (e) => {
         if (e.target.__state === undefined) {
@@ -54,16 +54,16 @@ export default defineComponent({
 
         if (!e.target.__state) {
           e.target.__state = true
-          zts.BaseObjectHub.restoreCssTipAll()
+          tsz.BaseObjectHub.restoreCssTipAll()
         } else {
           e.target.__state = false
-          zts.BaseObjectHub.removeCssTipAll()
+          tsz.BaseObjectHub.removeCssTipAll()
         }
 
-        zts.world.timerRender()
+        tsz.world.timerRender()
       },
       f3: (e) => {
-        zts.world.changeView('3d')
+        tsz.world.changeView('3d')
       }
     }
 

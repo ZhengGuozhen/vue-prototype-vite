@@ -16,7 +16,7 @@ class Demo {
 
 
         console.time('批量创建object')
-        for (let i = 0; i < 500; i++) {
+        for (let i = 0; i < 100; i++) {
             let o = new BaseObject(new BaseObjectData({
                 id: 'BaseObject-' + i,
                 position: [114 + i / 10, 30, 0]
@@ -45,7 +45,7 @@ class Demo {
         }
         console.timeEnd('批量创建object')
 
-        
+
         this.world.timerRender()
 
     }

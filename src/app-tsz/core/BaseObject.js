@@ -16,6 +16,9 @@ class BaseObjectData {
         this.size = 0.05
         this.cssTip = true
 
+        this.iconUrl = '/image/flag_cn.png'
+        this.iconRotation = [0, - Math.PI / 2, 0]
+
         this.CACHE = {
         }
 
@@ -53,6 +56,9 @@ class BaseObject {
         }
 
         // 
+        this.icon = null
+
+        // 
         this.__data = d
 
         this.init(d)
@@ -61,35 +67,40 @@ class BaseObject {
 
     init(d) {
 
-        let group = this.mesh;
+        let o = this.mesh;
 
         // 圆锥
-        let geometry = new THREE.ConeBufferGeometry(1, 2, 32)
-        let material = new THREE.MeshNormalMaterial()
-        let Object0 = new THREE.Mesh(geometry, material);
-        Object0.scale.set(1, 1, 1);
-        // group.add(Object0)
+        // let geometry = new THREE.ConeBufferGeometry(1, 2, 32)
+        // let material = new THREE.MeshNormalMaterial()
+        // let Object0 = new THREE.Mesh(geometry, material);
+        // Object0.scale.set(1, 1, 1);
+        // o.add(Object0)
 
         // 平面
-        geometry = new THREE.PlaneBufferGeometry(1, 1)
-        geometry.rotateX(- Math.PI / 2)
-        material = new THREE.MeshBasicMaterial({
-            color: 0xff0000,
-            opacity: 0.1,
-        });
-        let icon = new THREE.Mesh(geometry, material);
-        icon.scale.set(1, 1, 1);
-        group.add(icon)
+        if (d.iconUrl) {
+            let texture = new THREE.TextureLoader().load(d.iconUrl);
+            let material = new THREE.MeshBasicMaterial({ map: texture });
+
+            let geometry = new THREE.PlaneBufferGeometry(1, 1)
+            geometry.rotateX(- Math.PI / 2)
+
+            let icon = new THREE.Mesh(geometry, material);
+            icon.scale.set(1, 1, 1);
+            icon.rotation.set(...d.iconRotation)
+            o.add(icon)
+
+            this.icon = icon
+        }
 
         // 坐标轴
-        group.add(new THREE.AxesHelper(2))
+        // o.add(new THREE.AxesHelper(2))
         // 网格
-        group.add(new THREE.GridHelper(2, 10))
+        // o.add(new THREE.GridHelper(2, 10))
 
         // tip
         if (d.cssTip) {
 
-            this.addCssTip(group)
+            this.addCssTip()
 
         }
 
@@ -196,25 +207,30 @@ class BaseObject {
 
         // 
         const tipWrapper = document.createElement('div')
-        tipWrapper.textContent = ''
         tipWrapper.style = `
 pointer-events: none;
 height: 0;
 width: 0;
+user-select: none;
 `
+        tipWrapper.textContent = ''
+
         // 
         const tipBody = document.createElement('div')
-        tipBody.textContent = this.__data.id
         tipBody.style = `
-pointer-events: auto;
+pointer-events: none;
 position: absolute;
-left: 50px;
-bottom: 50px;
-height: 30px;
-width: 60px;
-border: solid red 1px;
-cursor: pointer;
+left: -50px;
+top: -60px;
 `
+        tipBody.innerHTML = `
+<div class="flex flex-row items-start cursor-pointer text-white">
+    <div class="pointer-events-auto border-2 border-red-400 bg-gray-500 whitespace-nowrap">${this.__data.id}</div>
+    <div class="pointer-events-auto border-2 border-red-400 bg-gray-500 w-24">slot1 slot1 slot1 slot1</div>
+    <div class="pointer-events-auto border-2 border-red-400 bg-gray-500 w-24">slot2 slot2 slot2 slot2 slot2</div>
+<div>
+`
+
         tipWrapper.appendChild(tipBody)
 
         // 
@@ -263,7 +279,10 @@ cursor: pointer;
             target: target,
             paintStyle: { stroke: 'red', strokeWidth: 1, dashstyle: '3' },
             endpoint: "Blank",
-            anchor: ["Center"],
+            // anchor: ["Center"],
+            // anchor: "AutoDefault",
+            // anchor: ["Perimeter", { shape: "Circle" }],
+            anchor: ["Perimeter", { shape: "Square" }],
             connector: ["Straight"],
         });
 
@@ -323,7 +342,7 @@ class BaseObjectHub {
     addObject(o) {
 
         o.hub = this
-        
+
         this.indexObjectID.set(o.__data.id, o)
 
         // 默认显示
