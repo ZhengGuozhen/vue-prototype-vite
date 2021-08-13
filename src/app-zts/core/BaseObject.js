@@ -22,7 +22,7 @@ class BaseObjectData {
         Object.assign(this, d)
 
     }
-    
+
 }
 
 class BaseObject {
@@ -137,26 +137,33 @@ class BaseObject {
             this.currentViewerSceneMode = this.cesium.viewer.scene.mode
         }
 
-        // 
+        // resize
         if (this.__data.fixedSize) {
+            
+            let o = this.mesh
 
             let factor = this.__data.size
 
             let mode = this.cesium.viewer.scene.mode
+
             if (mode === Cesium.SceneMode.SCENE3D) {
-                // 
+
+                // 计算 object 到 camera 平面的距离，可用，准确
+                let camera = this.cesium.viewer.camera
+                let cameraPlane = Cesium.Plane.fromPointNormal(camera.position, camera.directionWC)
+                let pos = new Cesium.Cartesian3(o.position.x, o.position.y, o.position.z)
+                let distance = Cesium.Plane.getPointDistance(cameraPlane, pos)
+                let scale = distance * factor;
+                o.scale.set(scale, scale, scale);
+
             } else if (mode === Cesium.SceneMode.COLUMBUS_VIEW) {
-                factor *= 0.015
+
+                let cameraHeight = this.cesium.viewer.camera.positionCartographic.height
+                let scale = cameraHeight * factor;
+                o.scale.set(scale, scale, scale);
+
             }
 
-            let mesh = this.mesh
-            // 计算 object 到 camera 平面的距离，可用，准确
-            let camera = this.cesium.viewer.camera
-            let cameraPlane = Cesium.Plane.fromPointNormal(camera.position, camera.directionWC)
-            let pos = new Cesium.Cartesian3(mesh.position.x, mesh.position.y, mesh.position.z)
-            let distance = Cesium.Plane.getPointDistance(cameraPlane, pos)
-            let scale = distance * factor;
-            mesh.scale.set(scale, scale, scale);
         }
 
     }

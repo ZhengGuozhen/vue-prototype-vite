@@ -6,9 +6,9 @@
       class="absolute w-h-screen overflow-hidden"
     ></div>
     <div class="absolute top-10 border-d flex">
-      <div class="m-2 border-d" @click="test.f1">remove/restore</div>
-      <div class="m-2 border-d" @click="test.f2">tip显隐</div>
-      <div class="m-2 border-d" @click="test.f3">3d/2d</div>
+      <div class="m-2 border-d cursor-pointer" @click="test.f1">remove/restore</div>
+      <div class="m-2 border-d cursor-pointer" @click="test.f2">tip显隐</div>
+      <div class="m-2 border-d cursor-pointer" @click="test.f3">3d/2d</div>
     </div>
   </div>
 </template>
