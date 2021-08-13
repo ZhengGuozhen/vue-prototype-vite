@@ -41,14 +41,14 @@ export default defineComponent({
 
       if (!e.target.__state) {
         e.target.__state = true
-        zts.BaseObject.__restoreCssTipAll()
+        zts.BaseObject.restoreCssTipAll()
       } else {
         e.target.__state = false
-        zts.BaseObject.__removeCssTipAll()
+        zts.BaseObject.removeCssTipAll()
       }
 
       zts.world.timerRender()
-      
+
     }
 
     function func_2(e) {

@@ -8,14 +8,15 @@ import World from './World.js'
 
 class BaseObjectData {
     constructor(d) {
-        this.config = {
-            fixedSize: true,
-            size: 1,
-            cssTip: true
-        }
-
+        
         this.id = uuid()
         this.position = [114, 30, 0]
+        this.fixedSize = true
+        this.size = 0.05
+        this.cssTip = true
+
+        this.userData = {
+        }
 
         Object.assign(this, d)
     }
@@ -26,38 +27,37 @@ class BaseObject {
     constructor(d = new BaseObjectData) {
 
         this.mesh = new THREE.Mesh()
+        // 
+        this.mesh.frustumCulled = false
 
         this.mesh.onBeforeRender = () => {
             
             // 切换 scene.mode 时执行一次
-            if (this.__currentViewerSceneMode !== this.__cesium.viewer.scene.mode) {
-                this.__dq()
-                this.__currentViewerSceneMode = this.__cesium.viewer.scene.mode
+            if (this.currentViewerSceneMode !== this.cesium.viewer.scene.mode) {
+                this.dq()
+                this.currentViewerSceneMode = this.cesium.viewer.scene.mode
             }
     
-            if (this.__data.config.fixedSize) {
+            if (this.__data.fixedSize) {
                 let mesh = this.mesh
                 // 计算 object 到 camera 平面的距离，可用，准确
-                let camera = this.__cesium.viewer.camera
+                let camera = this.cesium.viewer.camera
                 let cameraPlane = Cesium.Plane.fromPointNormal(camera.position, camera.directionWC)
                 let pos = new Cesium.Cartesian3(mesh.position.x, mesh.position.y, mesh.position.z)
                 let distance = Cesium.Plane.getPointDistance(cameraPlane, pos)
-                let scale = distance * 0.1;
+                let scale = distance * this.__data.size;
                 mesh.scale.set(scale, scale, scale);
             }
         }
 
-        // 
-        this.frustumCulled = false
-
-        this.__world = World.getInstance()
-        this.__cesium = this.__world.cesium
-        this.__three = this.__world.three
-        this.__currentViewerSceneMode = null
+        this.world = World.getInstance()
+        this.cesium = this.world.cesium
+        this.three = this.world.three
+        this.currentViewerSceneMode = null
 
         this.__data = d
 
-        this.__init(d)
+        this.init(d)
 
         BaseObject.objects.set(d.id, this)
 
@@ -65,20 +65,20 @@ class BaseObject {
 
     static rootGroup = new THREE.Group()
     static objects = new Map()
-    static __removeCssTipAll = function () {
+    static removeCssTipAll = function () {
         BaseObject.objects.forEach(o => {
-            o.mesh.remove(o.__tip.tipObject)
+            o.removeCssTip()
         })
     }
-    static __restoreCssTipAll = function () {
+    static restoreCssTipAll = function () {
         BaseObject.objects.forEach(o => {
-            o.mesh.add(o.__tip.tipObject)
+            o.restoreCssTip()
         })
     }
 
     
 
-    __init(d) {
+    init(d) {
 
         let group = this.mesh;
 
@@ -106,17 +106,17 @@ class BaseObject {
         group.add(new THREE.GridHelper(2, 10))
 
         // tip
-        if (d.config.cssTip) {
+        if (d.cssTip) {
 
-            this.__addCssTip(group)
+            this.addCssTip(group)
 
-            this.__tip.tipObject.onAfterRender = () => {
+            this.tip.tipObject.onAfterRender = () => {
 
-                if (!this.__tip.tipBody.__conn) {
+                if (!this.tip.tipBody.conn) {
 
-                    this.__addCssTipConn()
+                    this.addCssTipConn()
 
-                    this.__tip.tipObject.onAfterRender = () => { }
+                    this.tip.tipObject.onAfterRender = () => { }
 
                 }
 
@@ -126,7 +126,7 @@ class BaseObject {
 
     }
 
-    __addCssTip() {
+    addCssTip() {
 
         // 
         const tipWrapper = document.createElement('div')
@@ -163,23 +163,23 @@ cursor: pointer;
         })
 
         // 
-        if (!this.__tip) {
-            this.__tip = {}
+        if (!this.tip) {
+            this.tip = {}
         }
-        this.__tip.tipWrapper = tipWrapper
-        this.__tip.tipBody = tipBody
-        this.__tip.tipObject = tipObject
+        this.tip.tipWrapper = tipWrapper
+        this.tip.tipBody = tipBody
+        this.tip.tipObject = tipObject
 
     }
 
-    __addCssTipConn() {
+    addCssTipConn() {
 
         // 需要 render 一下，或者 document.body.appendChild(tipWrapper) 后面才能 plumbIns.connect
-        // document.body.appendChild(this.__tip.tipWrapper)
-        // this.__world.renderThree()
+        // document.body.appendChild(this.tip.tipWrapper)
+        // this.world.renderThree()
 
-        let source = this.__tip.tipBody
-        let target = this.__tip.tipWrapper
+        let source = this.tip.tipBody
+        let target = this.tip.tipWrapper
 
         const plumbIns = jsPlumb.getInstance()
         plumbIns.draggable(source)
@@ -192,24 +192,24 @@ cursor: pointer;
             connector: ["Straight"],
         });
 
-        source.__conn = conn
+        source.conn = conn
 
     }
 
-    __removeCssTip() {
-        this.mesh.remove(this.__tip.tipObject)
+    removeCssTip() {
+        this.mesh.remove(this.tip.tipObject)
     }
 
-    __restoreCssTip() {
-        this.mesh.add(this.__tip.tipObject)
+    restoreCssTip() {
+        this.mesh.add(this.tip.tipObject)
     }
 
-    __dq() {
+    dq() {
 
         let o = this.mesh
         let pos = this.__data.position
 
-        let mode = this.__cesium.viewer.scene.mode
+        let mode = this.cesium.viewer.scene.mode
 
         if (mode === Cesium.SceneMode.SCENE3D) {
 
@@ -222,7 +222,7 @@ cursor: pointer;
 
         } else if (mode === Cesium.SceneMode.COLUMBUS_VIEW) {
 
-            let p = this.__cesium.viewer.scene.mapProjection.project(
+            let p = this.cesium.viewer.scene.mapProjection.project(
                 new Cesium.Cartographic(
                     (pos[0] * Math.PI) / 180,
                     (pos[1] * Math.PI) / 180,
@@ -237,13 +237,13 @@ cursor: pointer;
 
     }
 
-    __restore() {
+    restore() {
         BaseObject.rootGroup.add(this.mesh)
-        this.__restoreCssTip()
+        this.restoreCssTip()
     }
-    __remove() {
+    remove() {
         BaseObject.rootGroup.remove(this.mesh)
-        this.__removeCssTip()
+        this.removeCssTip()
     }
 
 }
