@@ -56,11 +56,11 @@ class World {
     init(el) {
 
         this.cesiumContainer = document.createElement('div')
-        this.cesiumContainer.className = 'absolute w-h-screen'
+        this.cesiumContainer.className = 'absolute w-h-full'
         el.appendChild(this.cesiumContainer)
 
         this.threeContainer = document.createElement('div')
-        this.threeContainer.className = 'absolute w-h-screen pointer-events-none'
+        this.threeContainer.className = 'absolute w-h-full pointer-events-none'
         el.appendChild(this.threeContainer)
 
         this.initCesium()

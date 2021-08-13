@@ -23,11 +23,6 @@ class Demo {
 
         this.world.timerRender()
 
-        // test
-        setTimeout(() => {
-            this.world.timerRender()
-        }, 5000)
-
     }
 
 }

@@ -1,10 +1,7 @@
 <template>
   <div class="w-h-screen">
-    <div
-      id="rootContainer"
-      ref="rootContainer"
-      class="absolute w-h-screen overflow-hidden"
-    ></div>
+    <div ref="rootContainer" class="absolute w-h-screen overflow-hidden"></div>
+
     <div class="absolute top-10 border-d flex">
       <div class="m-2 border-d cursor-pointer" @click="test.f1">remove/restore</div>
       <div class="m-2 border-d cursor-pointer" @click="test.f2">tip显隐</div>
@@ -75,6 +72,8 @@ export default defineComponent({
 })
 </script>
 
-<style lang="scss" scoped>
-//
+<style lang="scss">
+.cesium-widget-credits {
+  display: none !important;
+}
 </style>
