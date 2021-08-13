@@ -83,6 +83,7 @@ class World {
 
     // ======================================
     initCesium() {
+
         let extent = Cesium.Rectangle.fromDegrees(
             this.defaultPosition[0] - 1, this.defaultPosition[1] - 1,
             this.defaultPosition[0] + 1, this.defaultPosition[1] + 1);
@@ -178,8 +179,6 @@ class World {
 
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-        handler.setInputAction((event) => {
-        }, Cesium.ScreenSpaceEventType.WHEEL);
     }
 
     flyTo(longitude, latitude, height) {
@@ -198,6 +197,7 @@ class World {
 
     // ======================================
     initThree() {
+
         let fov = 45
 
         let width = this.threeContainer.clientWidth
@@ -236,7 +236,9 @@ class World {
         window.addEventListener('resize', () => {
             that.onWindowResize()
         });
+
     }
+
     onWindowResize() {
         let width = this.threeContainer.clientWidth
         let height = this.threeContainer.clientHeight
@@ -284,6 +286,7 @@ class World {
             this.renderThree();
         }
     }
+
     timerRender(time = 1000) {
         if (this.renderTimeoutID) {
             clearTimeout(this.renderTimeoutID)
@@ -295,7 +298,6 @@ class World {
             this.renderEnable = false
         }, time)
     }
-
 
     changeView() {
 
@@ -320,7 +322,10 @@ class World {
         window.dispatchEvent(this.event_view_changed)
 
     }
+    // ======================================
 
+
+    
     // 弃用，由 obejct 自己管理 resize
     resizeObjects(object) {
 
@@ -400,8 +405,6 @@ class World {
         console.timeEnd('resizeObjects cameraHeight:' + cameraHeight)
 
     }
-    // ======================================
-
 
 }
 

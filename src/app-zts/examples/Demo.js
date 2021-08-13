@@ -7,7 +7,7 @@ class Demo {
 
         this.world = World.getInstance()
         this.world.init(el)
-        this.world.three.scene.add(BaseObject.rootGroup)
+        BaseObject.setEnable(true)
 
         this.BaseObject = BaseObject
 

@@ -6,8 +6,9 @@
       class="absolute w-h-screen overflow-hidden"
     ></div>
     <div class="absolute top-10 border-d flex">
-      <div class="m-2 border-d" @click="func_1">tip显隐</div>
-      <div class="m-2 border-d" @click="func_2">3d/2d</div>
+      <div class="m-2 border-d" @click="test.f1">remove/restore</div>
+      <div class="m-2 border-d" @click="test.f2">tip显隐</div>
+      <div class="m-2 border-d" @click="test.f3">3d/2d</div>
     </div>
   </div>
 </template>
@@ -33,29 +34,43 @@ export default defineComponent({
       zts = new Demo(el)
     })
 
-    function func_1(e) {
-      
-      if (e.target.__state === undefined) {
-        e.target.__state = true
+    let test = {
+      f1: (e) => {
+        if (e.target.__state === undefined) {
+          e.target.__state = true
+        }
+
+        if (!e.target.__state) {
+          e.target.__state = true
+          zts.BaseObject.restoreAll()
+        } else {
+          e.target.__state = false
+          zts.BaseObject.removeAll()
+        }
+
+        zts.world.timerRender()
+      },
+      f2: (e) => {
+        if (e.target.__state === undefined) {
+          e.target.__state = true
+        }
+
+        if (!e.target.__state) {
+          e.target.__state = true
+          zts.BaseObject.restoreCssTipAll()
+        } else {
+          e.target.__state = false
+          zts.BaseObject.removeCssTipAll()
+        }
+
+        zts.world.timerRender()
+      },
+      f3: (e) => {
+        zts.world.changeView('3d')
       }
-
-      if (!e.target.__state) {
-        e.target.__state = true
-        zts.BaseObject.restoreCssTipAll()
-      } else {
-        e.target.__state = false
-        zts.BaseObject.removeCssTipAll()
-      }
-
-      zts.world.timerRender()
-
     }
 
-    function func_2(e) {
-      zts.world.changeView('3d')
-    }
-
-    return { rootContainer, func_1, func_2 }
+    return { rootContainer, test }
   }
 })
 </script>

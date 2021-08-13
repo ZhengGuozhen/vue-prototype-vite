@@ -7,8 +7,9 @@ import * as Cesium from 'cesium'
 import World from './World.js'
 
 class BaseObjectData {
+
     constructor(d) {
-        
+
         this.id = uuid()
         this.position = [114, 30, 0]
         this.fixedSize = true
@@ -19,64 +20,78 @@ class BaseObjectData {
         }
 
         Object.assign(this, d)
+
     }
+    
 }
 
 class BaseObject {
 
+    static __rootGroup = new THREE.Group()
+
+    static __objects = new Map()
+
+    static setEnable = (enable) => {
+        if (enable) {
+            World.getInstance().three.scene.add(BaseObject.__rootGroup)
+        } else {
+            World.getInstance().three.scene.remove(BaseObject.__rootGroup)
+        }
+    }
+
+    static getObjectByID = (id) => {
+        return BaseObject.__objects.get(id)
+    }
+
+    static removeAll = () => {
+        BaseObject.__objects.forEach(o => {
+            o.remove()
+        })
+    }
+
+    static restoreAll = () => {
+        BaseObject.__objects.forEach(o => {
+            o.restore()
+        })
+    }
+
+    static removeCssTipAll = () => {
+        BaseObject.__objects.forEach(o => {
+            o.removeCssTip()
+        })
+    }
+
+    static restoreCssTipAll = () => {
+        BaseObject.__objects.forEach(o => {
+            o.restoreCssTip()
+        })
+    }
+
     constructor(d = new BaseObjectData) {
 
-        this.mesh = new THREE.Mesh()
-        // 
-        this.mesh.frustumCulled = false
+        const that = this
 
+        // 
+        this.mesh = new THREE.Mesh()
+        this.mesh.frustumCulled = false
         this.mesh.onBeforeRender = () => {
-            
-            // 切换 scene.mode 时执行一次
-            if (this.currentViewerSceneMode !== this.cesium.viewer.scene.mode) {
-                this.dq()
-                this.currentViewerSceneMode = this.cesium.viewer.scene.mode
-            }
-    
-            if (this.__data.fixedSize) {
-                let mesh = this.mesh
-                // 计算 object 到 camera 平面的距离，可用，准确
-                let camera = this.cesium.viewer.camera
-                let cameraPlane = Cesium.Plane.fromPointNormal(camera.position, camera.directionWC)
-                let pos = new Cesium.Cartesian3(mesh.position.x, mesh.position.y, mesh.position.z)
-                let distance = Cesium.Plane.getPointDistance(cameraPlane, pos)
-                let scale = distance * this.__data.size;
-                mesh.scale.set(scale, scale, scale);
-            }
+            that.onMeshBeforeRender()
         }
 
+        // 
         this.world = World.getInstance()
         this.cesium = this.world.cesium
         this.three = this.world.three
         this.currentViewerSceneMode = null
 
+        // 
         this.__data = d
 
         this.init(d)
 
-        BaseObject.objects.set(d.id, this)
+        BaseObject.__objects.set(d.id, this)
 
     }
-
-    static rootGroup = new THREE.Group()
-    static objects = new Map()
-    static removeCssTipAll = function () {
-        BaseObject.objects.forEach(o => {
-            o.removeCssTip()
-        })
-    }
-    static restoreCssTipAll = function () {
-        BaseObject.objects.forEach(o => {
-            o.restoreCssTip()
-        })
-    }
-
-    
 
     init(d) {
 
@@ -110,18 +125,38 @@ class BaseObject {
 
             this.addCssTip(group)
 
-            this.tip.tipObject.onAfterRender = () => {
+        }
 
-                if (!this.tip.tipBody.conn) {
+    }
 
-                    this.addCssTipConn()
+    onMeshBeforeRender() {
 
-                    this.tip.tipObject.onAfterRender = () => { }
+        // 切换 scene.mode 时执行一次
+        if (this.currentViewerSceneMode !== this.cesium.viewer.scene.mode) {
+            this.dq()
+            this.currentViewerSceneMode = this.cesium.viewer.scene.mode
+        }
 
-                }
+        // 
+        if (this.__data.fixedSize) {
 
+            let factor = this.__data.size
+
+            let mode = this.cesium.viewer.scene.mode
+            if (mode === Cesium.SceneMode.SCENE3D) {
+                // 
+            } else if (mode === Cesium.SceneMode.COLUMBUS_VIEW) {
+                factor *= 0.015
             }
 
+            let mesh = this.mesh
+            // 计算 object 到 camera 平面的距离，可用，准确
+            let camera = this.cesium.viewer.camera
+            let cameraPlane = Cesium.Plane.fromPointNormal(camera.position, camera.directionWC)
+            let pos = new Cesium.Cartesian3(mesh.position.x, mesh.position.y, mesh.position.z)
+            let distance = Cesium.Plane.getPointDistance(cameraPlane, pos)
+            let scale = distance * factor;
+            mesh.scale.set(scale, scale, scale);
         }
 
     }
@@ -170,8 +205,20 @@ cursor: pointer;
         this.tip.tipBody = tipBody
         this.tip.tipObject = tipObject
 
-    }
+        // 
+        this.tip.tipObject.onAfterRender = () => {
 
+            if (!this.tip.tipBody.conn) {
+
+                this.addCssTipConn()
+
+                this.tip.tipObject.onAfterRender = () => { }
+
+            }
+
+        }
+
+    }
     addCssTipConn() {
 
         // 需要 render 一下，或者 document.body.appendChild(tipWrapper) 后面才能 plumbIns.connect
@@ -238,11 +285,11 @@ cursor: pointer;
     }
 
     restore() {
-        BaseObject.rootGroup.add(this.mesh)
+        BaseObject.__rootGroup.add(this.mesh)
         this.restoreCssTip()
     }
     remove() {
-        BaseObject.rootGroup.remove(this.mesh)
+        BaseObject.__rootGroup.remove(this.mesh)
         this.removeCssTip()
     }
 
