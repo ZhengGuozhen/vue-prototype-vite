@@ -27,49 +27,12 @@ class BaseObjectData {
 
 class BaseObject {
 
-    static __rootGroup = new THREE.Group()
-
-    static __objects = new Map()
-
-    static setEnable = (enable) => {
-        if (enable) {
-            World.getInstance().three.scene.add(BaseObject.__rootGroup)
-        } else {
-            World.getInstance().three.scene.remove(BaseObject.__rootGroup)
-        }
-    }
-
-    static getObjectByID = (id) => {
-        return BaseObject.__objects.get(id)
-    }
-
-    static removeAll = () => {
-        BaseObject.__objects.forEach(o => {
-            o.remove()
-        })
-    }
-
-    static restoreAll = () => {
-        BaseObject.__objects.forEach(o => {
-            o.restore()
-        })
-    }
-
-    static removeCssTipAll = () => {
-        BaseObject.__objects.forEach(o => {
-            o.removeCssTip()
-        })
-    }
-
-    static restoreCssTipAll = () => {
-        BaseObject.__objects.forEach(o => {
-            o.restoreCssTip()
-        })
-    }
-
     constructor(d = new BaseObjectData) {
 
         const that = this
+
+        // 
+        this.hub = null
 
         // 
         this.mesh = new THREE.Mesh()
@@ -77,6 +40,7 @@ class BaseObject {
         this.mesh.onBeforeRender = () => {
             that.onMeshBeforeRender()
         }
+        this.mesh.__tag = 'BaseObject'
 
         // 
         this.world = World.getInstance()
@@ -92,8 +56,6 @@ class BaseObject {
         this.__data = d
 
         this.init(d)
-
-        BaseObject.__objects.set(d.id, this)
 
     }
 
@@ -180,7 +142,7 @@ class BaseObject {
             let b = this.mesh.position
             let d = a.distanceTo(b)
             const r = 6378137 * 1.414
-            
+
             let object_at_front
             if (d > r) {
                 object_at_front = false
@@ -192,6 +154,39 @@ class BaseObject {
                 object_at_front ? this.restoreCssTip() : this.removeCssTip()
             }
             this.__cache__object_at_front = object_at_front
+
+        }
+
+    }
+
+    dq() {
+
+        let o = this.mesh
+        let pos = this.__data.position
+
+        let mode = this.cesium.viewer.scene.mode
+
+        if (mode === Cesium.SceneMode.SCENE3D) {
+
+            let pos_ = Cesium.Cartesian3.fromDegrees(...pos);
+
+            o.position.set(pos_.x, pos_.y, pos_.z)
+            o.up.set(0, 0, -6378137)
+            o.lookAt(new THREE.Vector3(0, 0, 0));
+            o.rotateX(-Math.PI / 2)
+
+        } else if (mode === Cesium.SceneMode.COLUMBUS_VIEW) {
+
+            let p = this.cesium.viewer.scene.mapProjection.project(
+                new Cesium.Cartographic(
+                    (pos[0] * Math.PI) / 180,
+                    (pos[1] * Math.PI) / 180,
+                    pos[2]
+                )
+            )
+
+            o.position.set(p.z, p.x, p.y)
+            o.rotation.set(0, Math.PI, Math.PI / 2)
 
         }
 
@@ -281,55 +276,89 @@ cursor: pointer;
             this.mesh.remove(this.tip.tipObject)
         }
     }
-
     restoreCssTip() {
         if (this.tip.tipObject) {
             this.mesh.add(this.tip.tipObject)
         }
     }
 
-    dq() {
-
-        let o = this.mesh
-        let pos = this.__data.position
-
-        let mode = this.cesium.viewer.scene.mode
-
-        if (mode === Cesium.SceneMode.SCENE3D) {
-
-            let pos_ = Cesium.Cartesian3.fromDegrees(...pos);
-
-            o.position.set(pos_.x, pos_.y, pos_.z)
-            o.up.set(0, 0, -6378137)
-            o.lookAt(new THREE.Vector3(0, 0, 0));
-            o.rotateX(-Math.PI / 2)
-
-        } else if (mode === Cesium.SceneMode.COLUMBUS_VIEW) {
-
-            let p = this.cesium.viewer.scene.mapProjection.project(
-                new Cesium.Cartographic(
-                    (pos[0] * Math.PI) / 180,
-                    (pos[1] * Math.PI) / 180,
-                    pos[2]
-                )
-            )
-
-            o.position.set(p.z, p.x, p.y)
-            o.rotation.set(0, Math.PI, Math.PI / 2)
-
-        }
-
-    }
-
     restore() {
-        BaseObject.__rootGroup.add(this.mesh)
+        if (this.hub) {
+            this.hub.rootGroup.add(this.mesh)
+        } else {
+            this.three.scene.add(this.mesh)
+        }
         this.restoreCssTip()
     }
     remove() {
-        BaseObject.__rootGroup.remove(this.mesh)
-        this.removeCssTip()
+        if (this.mesh.parent) {
+            this.mesh.parent.remove(this.mesh)
+            this.removeCssTip()
+        }
     }
 
 }
 
-export { BaseObject, BaseObjectData }
+class BaseObjectHub {
+
+    constructor(name = 'BaseObjectHub') {
+
+        this.name = name
+
+        this.rootGroup = new THREE.Group()
+        World.getInstance().three.scene.add(this.rootGroup)
+
+        this.indexObjectID = new Map()
+
+    }
+
+    setEnable(enable) {
+        if (enable) {
+            World.getInstance().three.scene.add(this.rootGroup)
+        } else {
+            World.getInstance().three.scene.remove(this.rootGroup)
+        }
+    }
+
+    addObject(o) {
+
+        o.hub = this
+        
+        this.indexObjectID.set(o.__data.id, o)
+
+        // 默认显示
+        this.rootGroup.add(o.mesh)
+
+    }
+
+    getObjectByID(id) {
+        return this.indexObjectID.get(id)
+    }
+
+    removeAll() {
+        this.indexObjectID.forEach(o => {
+            o.remove()
+        })
+    }
+
+    restoreAll() {
+        this.indexObjectID.forEach(o => {
+            o.restore()
+        })
+    }
+
+    removeCssTipAll() {
+        this.indexObjectID.forEach(o => {
+            o.removeCssTip()
+        })
+    }
+
+    restoreCssTipAll() {
+        this.indexObjectID.forEach(o => {
+            o.restoreCssTip()
+        })
+    }
+
+}
+
+export { BaseObject, BaseObjectData, BaseObjectHub }

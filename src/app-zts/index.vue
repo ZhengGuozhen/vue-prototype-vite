@@ -39,10 +39,10 @@ export default defineComponent({
 
         if (!e.target.__state) {
           e.target.__state = true
-          zts.BaseObject.restoreAll()
+          zts.BaseObjectHub.restoreAll()
         } else {
           e.target.__state = false
-          zts.BaseObject.removeAll()
+          zts.BaseObjectHub.removeAll()
         }
 
         zts.world.timerRender()
@@ -54,10 +54,10 @@ export default defineComponent({
 
         if (!e.target.__state) {
           e.target.__state = true
-          zts.BaseObject.restoreCssTipAll()
+          zts.BaseObjectHub.restoreCssTipAll()
         } else {
           e.target.__state = false
-          zts.BaseObject.removeCssTipAll()
+          zts.BaseObjectHub.removeCssTipAll()
         }
 
         zts.world.timerRender()
