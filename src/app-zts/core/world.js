@@ -145,9 +145,6 @@ class World {
         this.cesium.viewer.camera.moveEnd.addEventListener(() => {
             // console.log('camera moveEnd')
             that.timerRender()
-
-            that.resizeObjects()
-
         })
 
         // 鼠标事件
@@ -182,7 +179,6 @@ class World {
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         handler.setInputAction((event) => {
-            that.resizeObjects()
         }, Cesium.ScreenSpaceEventType.WHEEL);
     }
 
@@ -325,25 +321,34 @@ class World {
 
     }
 
+    // 弃用，由 obejct 自己管理 resize
     resizeObjects(object) {
 
         let o
         object ? o = object : o = this.three.scene
 
         const factor = 0.1
-
+        
+        // 弃用
+        /*
         let cameraHeight = 1
         let mode = this.cesium.viewer.scene.mode
         if (mode === Cesium.SceneMode.SCENE3D) {
-            // cemera 高度，两种方法
+            // cemera 高度，3种方法
             // let ellipsoid = this.cesium.viewer.scene.globe.ellipsoid;
             // let cameraHeight = ellipsoid.cartesianToCartographic(this.cesium.viewer.camera.position).height;
-            let cartographic = Cesium.Cartographic.fromCartesian(this.cesium.viewer.camera.position)
-            cameraHeight = cartographic.height
+            
+            // let cartographic = Cesium.Cartographic.fromCartesian(this.cesium.viewer.camera.position)
+            // cameraHeight = cartographic.height
+
+            cameraHeight = this.cesium.viewer.camera.positionCartographic.height
 
         } else if (mode === Cesium.SceneMode.COLUMBUS_VIEW) {
             cameraHeight = this.cesium.viewer.camera.position.z
         }
+        */
+
+        let cameraHeight = this.cesium.viewer.camera.positionCartographic.height
 
         console.time('resizeObjects cameraHeight:' + cameraHeight)
 
@@ -369,16 +374,23 @@ class World {
                 // o.scale.set(scale, scale, scale);
 
                 // 计算 object 相对于 camera 的 position，可用，较快
-                let cameraPos = this.cesium.viewer.camera.position
-                let cameraPos_ = new THREE.Vector3(cameraPos.x, cameraPos.y, cameraPos.z)
-                let v = new THREE.Vector3();
-                let distanceToCamera = v.subVectors(
-                    o.position, cameraPos_).length()
-                let scale = distanceToCamera * factor;
+                // let cameraPos = this.cesium.viewer.camera.position
+                // let cameraPos_ = new THREE.Vector3(cameraPos.x, cameraPos.y, cameraPos.z)
+                // let v = new THREE.Vector3();
+                // let distanceToCamera = v.subVectors(
+                //     o.position, cameraPos_).length()
+                // let scale = distanceToCamera * factor;
+                // o.scale.set(scale, scale, scale);
+
+                // 计算 object 到 camera 平面的距离，可用，准确
+                let camera = this.cesium.viewer.camera
+                let cameraPlane = Cesium.Plane.fromPointNormal(camera.position, camera.directionWC)
+                let pos = new Cesium.Cartesian3(o.position.x,o.position.y,o.position.z) 
+                let distance = Cesium.Plane.getPointDistance(cameraPlane, pos)
+                let scale = distance * factor;
                 o.scale.set(scale, scale, scale);
 
-                todo 应该计算 object 到 camera 平面的距离
-
+                // 计算 cemera 相对地表的高度，可用，快速，但是旋转视角后结果错误
                 // let scale = cameraHeight * factor;
                 // o.scale.set(scale, scale, scale);
             }
