@@ -16,7 +16,7 @@ class BaseObjectData {
         this.size = 0.05
         this.cssTip = true
 
-        this.userData = {
+        this.CACHE = {
         }
 
         Object.assign(this, d)
@@ -85,6 +85,10 @@ class BaseObject {
         this.currentViewerSceneMode = null
 
         // 
+        this.tip = {
+        }
+
+        // 
         this.__data = d
 
         this.init(d)
@@ -102,7 +106,7 @@ class BaseObject {
         let material = new THREE.MeshNormalMaterial()
         let Object0 = new THREE.Mesh(geometry, material);
         Object0.scale.set(1, 1, 1);
-        group.add(Object0)
+        // group.add(Object0)
 
         // 平面
         geometry = new THREE.PlaneBufferGeometry(1, 1)
@@ -139,7 +143,7 @@ class BaseObject {
 
         // resize
         if (this.__data.fixedSize) {
-            
+
             let o = this.mesh
 
             let factor = this.__data.size
@@ -163,6 +167,31 @@ class BaseObject {
                 o.scale.set(scale, scale, scale);
 
             }
+
+        }
+
+        // 球面另一边不显示
+        if (this.cesium.viewer.scene.mode === Cesium.SceneMode.SCENE3D) {
+
+            let cameraPos = this.cesium.viewer.camera.positionCartographic
+            let cameraPos_ = Cesium.Cartesian3.fromRadians(cameraPos.longitude, cameraPos.latitude, 0)
+
+            let a = new THREE.Vector3(cameraPos_.x, cameraPos_.y, cameraPos_.z)
+            let b = this.mesh.position
+            let d = a.distanceTo(b)
+            const r = 6378137 * 1.414
+            
+            let object_at_front
+            if (d > r) {
+                object_at_front = false
+            } else {
+                object_at_front = true
+            }
+
+            if (object_at_front !== this.__cache__object_at_front) {
+                object_at_front ? this.restoreCssTip() : this.removeCssTip()
+            }
+            this.__cache__object_at_front = object_at_front
 
         }
 
@@ -205,9 +234,6 @@ cursor: pointer;
         })
 
         // 
-        if (!this.tip) {
-            this.tip = {}
-        }
         this.tip.tipWrapper = tipWrapper
         this.tip.tipBody = tipBody
         this.tip.tipObject = tipObject
@@ -251,11 +277,15 @@ cursor: pointer;
     }
 
     removeCssTip() {
-        this.mesh.remove(this.tip.tipObject)
+        if (this.tip.tipObject) {
+            this.mesh.remove(this.tip.tipObject)
+        }
     }
 
     restoreCssTip() {
-        this.mesh.add(this.tip.tipObject)
+        if (this.tip.tipObject) {
+            this.mesh.add(this.tip.tipObject)
+        }
     }
 
     dq() {

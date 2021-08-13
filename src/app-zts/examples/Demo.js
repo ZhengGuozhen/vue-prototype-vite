@@ -12,7 +12,7 @@ class Demo {
         this.BaseObject = BaseObject
 
         console.time('批量创建object')
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 500; i++) {
             let o = new BaseObject(new BaseObjectData({
                 id: 'id-' + i,
                 position: [114 + i / 10, 30, 0]

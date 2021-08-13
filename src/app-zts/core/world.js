@@ -232,6 +232,13 @@ class World {
         this.threeContainer.appendChild(this.three.renderer2.domElement)
 
         // 
+        const globalClippingPlanes = [
+            new THREE.Plane(new THREE.Vector3(0, 0, -1), 0)
+        ]
+        this.three.renderer.clippingPlanes = globalClippingPlanes;
+        // this.three.renderer.localClippingEnabled = true;
+
+        // 
         let that = this;
         window.addEventListener('resize', () => {
             that.onWindowResize()
@@ -275,6 +282,12 @@ class World {
             cvm[3], cvm[7], cvm[11], cvm[15]
         );
         // three.camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+        
+        // 裁切面
+        let v = this.cesium.viewer.camera.position
+        this.three.renderer.clippingPlanes[0].set(new THREE.Vector3(v.x, v.y, v.z), 0)
+
 
         this.three.renderer.render(this.three.scene, this.three.camera);
         this.three.renderer2.render(this.three.scene, this.three.camera);
@@ -325,7 +338,7 @@ class World {
     // ======================================
 
 
-    
+
     // 弃用，由 obejct 自己管理 resize
     resizeObjects(object) {
 
@@ -333,7 +346,7 @@ class World {
         object ? o = object : o = this.three.scene
 
         const factor = 0.1
-        
+
         // 弃用
         /*
         let cameraHeight = 1
@@ -390,7 +403,7 @@ class World {
                 // 计算 object 到 camera 平面的距离，可用，准确
                 let camera = this.cesium.viewer.camera
                 let cameraPlane = Cesium.Plane.fromPointNormal(camera.position, camera.directionWC)
-                let pos = new Cesium.Cartesian3(o.position.x,o.position.y,o.position.z) 
+                let pos = new Cesium.Cartesian3(o.position.x, o.position.y, o.position.z)
                 let distance = Cesium.Plane.getPointDistance(cameraPlane, pos)
                 let scale = distance * factor;
                 o.scale.set(scale, scale, scale);
