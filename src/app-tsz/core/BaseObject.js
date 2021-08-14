@@ -11,14 +11,21 @@ class BaseObjectData {
 
     constructor(d) {
 
-        this.id = uuid()
+        this.id = d.id || uuid()
         this.position = [114, 30, 0]
         this.fixedSize = true
         this.size = 0.05
-        this.cssTip = true
+        
+        this.cssTip = {
+            show: true,
+            defaultValue: this.id
+        }
 
-        this.iconUrl = '/image/flag_cn.png'
-        this.iconRotation = [0, - Math.PI / 2, 0]
+        this.icon = {
+            show: true,
+            url: '/image/flag_cn.png',
+            rotation: 45
+        }
 
         this.CACHE = {
         }
@@ -54,8 +61,7 @@ class BaseObject {
         this.currentViewerSceneMode = null
 
         // 
-        this.tip = {
-        }
+        this.tip = {}
 
         // 
         this.icon = null
@@ -72,17 +78,18 @@ class BaseObject {
         let o = this.mesh;
 
         // 平面
-        if (d.iconUrl) {
-            let material = this.resource.getMaterial('国旗');
+        if (d.icon.show) {
+            let material = this.resource.getMaterialTexture(d.icon.url);
             let geometry = this.resource.getGeometry('plane')
 
-            let icon = new THREE.Mesh(geometry, material);
-            icon.scale.set(1, 1, 1);
-            icon.rotation.set(...d.iconRotation)
-            o.add(icon)
+            let iconObject = new THREE.Mesh(geometry, material);
+            iconObject.scale.set(1, 1, 1);
+            o.add(iconObject)
 
-            this.icon = icon
+            this.icon = iconObject
             this.icon.__rootParent = this
+
+            this.rotateIcon(d.icon.rotation)
         }
 
         // 坐标轴
@@ -91,7 +98,7 @@ class BaseObject {
         // o.add(new THREE.GridHelper(2, 10))
 
         // tip
-        if (d.cssTip) {
+        if (d.cssTip.show) {
 
             this.addCssTip()
 
@@ -196,6 +203,10 @@ class BaseObject {
 
     }
 
+    rotateIcon(course) {
+        this.icon.rotation.set(0, - course * Math.PI / 180, 0)
+    }
+
     addCssTip() {
 
         // 
@@ -218,7 +229,7 @@ top: -60px;
 `
         tipBody.innerHTML = `
 <div class="flex flex-row items-start cursor-pointer text-white">
-    <div class="pointer-events-auto border-2 border-red-400 bg-gray-500 whitespace-nowrap">${this.__data.id}</div>
+    <div class="pointer-events-auto border-2 border-red-400 bg-gray-500 whitespace-nowrap">${this.__data.cssTip.defaultValue}</div>
     <div class="pointer-events-auto border-2 border-red-400 bg-gray-500 w-24">slot1 slot1 slot1 slot1</div>
     <div class="pointer-events-auto border-2 border-red-400 bg-gray-500 w-24">slot2 slot2 slot2 slot2 slot2</div>
 <div>
@@ -305,7 +316,6 @@ top: -60px;
         } else {
             this.restoreCssTip()
         }
-        this.world.timerRender()
     }
 
     restore() {

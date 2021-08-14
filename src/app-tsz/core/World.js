@@ -20,6 +20,13 @@ class World {
         }
         return World.instance
     }
+    static deleteInstance() {
+        if (World.instance) {
+            console.warn('delete World Instance')
+            window.removeEventListener('resize', World.instance.eventListener_resise)
+            World.instance = null
+        }
+    }
 
     constructor() {
 
@@ -257,11 +264,12 @@ class World {
         // 
         this.three.raycaster = new THREE.Raycaster()
 
-        // 
+        // 单例对象析构时需要 removeEventListener
         let that = this;
-        window.addEventListener('resize', () => {
+        this.eventListener_resise = () => {
             that.onWindowResize()
-        });
+        }
+        window.addEventListener('resize', that.eventListener_resise)
 
     }
 

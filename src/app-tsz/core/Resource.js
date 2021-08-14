@@ -10,39 +10,61 @@ class Resource {
         }
         return Resource.instance
     }
+    static deleteInstance() {
+        if (Resource.instance) {
+            console.warn('delete Resource Instance')
+            Resource.instance = null
+        }
+    }
 
     constructor() {
 
         this.texture = {
-            国旗: new THREE.TextureLoader().load('/image/flag_cn.png')
         }
 
         this.material = {
-            国旗: new THREE.MeshBasicMaterial({ map: this.texture.国旗 })
+            meshBasicMaterial: new THREE.MeshBasicMaterial(),
+            meshNormalMaterial: new THREE.MeshNormalMaterial()
         }
 
         const plane = new THREE.PlaneBufferGeometry(1, 1)
         plane.rotateX(- Math.PI / 2)
+
         this.geometry = {
-            plane: plane
+            plane: plane,
+            cone: new THREE.ConeBufferGeometry(1, 2, 16)
         }
 
     }
 
-    getGeometry(id) {
-        if (this.geometry[id]) {
-            return this.geometry[id]
+    getGeometry(key) {
+        if (this.geometry[key]) {
+            return this.geometry[key]
         } else {
             return this.geometry['plane']
         }
     }
 
-    getMaterial(id) {
-        if (this.material[id]) {
-            return this.material[id]
+    getMaterial(key) {
+        if (this.material[key]) {
+            return this.material[key]
         } else {
-            return this.material['国旗']
+            return this.material['meshBasicMaterial']
         }
+    }
+
+    getMaterialTexture(url) {
+        if (!this.texture[url]) {
+            console.warn('new Texture', url)
+            this.texture[url] = new THREE.TextureLoader().load(url)
+        }
+
+        if (!this.material[url]) {
+            console.warn('new Material', url)
+            this.material[url] = new THREE.MeshBasicMaterial({ map: this.texture[url] })
+        }
+
+        return this.material[url]
     }
 
 }

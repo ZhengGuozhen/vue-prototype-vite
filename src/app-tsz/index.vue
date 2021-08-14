@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import { defineComponent, onMounted, reactive, ref } from 'vue'
+import { defineComponent, onMounted, onUnmounted, reactive, ref } from 'vue'
 
 // development 情况下：解决 vite.config.ts 中 base 路径非根目录时，找不到样式文件的问题
 // produciton  情况下：无此问题
@@ -113,6 +113,10 @@ export default defineComponent({
       }, tsz.world.ScreenSpaceEventType.RIGHT_CLICK)
     })
 
+    onUnmounted(() => {
+      tsz.dispose()
+    })
+
     const onWorldClickLeft = (e) => {
       contextMenuData.show = false
     }
@@ -146,24 +150,6 @@ export default defineComponent({
 
     const onRootContainerClick = (e) => {
       // let o = tsz.BaseObjectHub.pick(e.clientX, e.clientY)
-    }
-
-    let test = {
-      f1: (e) => {
-        if (e.target.__state === undefined) {
-          e.target.__state = true
-        }
-
-        if (!e.target.__state) {
-          e.target.__state = true
-          tsz.BaseObjectHub.restoreAll()
-        } else {
-          e.target.__state = false
-          tsz.BaseObjectHub.removeAll()
-        }
-
-        tsz.world.timerRender()
-      }
     }
 
     return { rootContainer, contextMenuData, onRootContainerClick }

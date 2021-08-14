@@ -1,4 +1,5 @@
 import World from '../core/World.js'
+import Resource from '../core/Resource.js'
 import { BaseObjectData, BaseObject, BaseObjectHub } from '../core/BaseObject.js'
 import { TrackObject } from '../modules/TrackObject.js'
 import { EventObject } from '../modules/EventObject.js'
@@ -48,6 +49,11 @@ class Demo {
 
         this.world.timerRender()
 
+    }
+
+    dispose() {
+        World.deleteInstance()
+        Resource.deleteInstance()
     }
 
 }
