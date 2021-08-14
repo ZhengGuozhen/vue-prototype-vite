@@ -43,7 +43,7 @@ class BaseObject {
         this.mesh.onBeforeRender = () => {
             that.onMeshBeforeRender()
         }
-        this.mesh.__tag = 'BaseObject'
+        this.mesh.__rootParent = this
 
         // 
         this.world = World.getInstance()
@@ -69,13 +69,6 @@ class BaseObject {
 
         let o = this.mesh;
 
-        // 圆锥
-        // let geometry = new THREE.ConeBufferGeometry(1, 2, 32)
-        // let material = new THREE.MeshNormalMaterial()
-        // let Object0 = new THREE.Mesh(geometry, material);
-        // Object0.scale.set(1, 1, 1);
-        // o.add(Object0)
-
         // 平面
         if (d.iconUrl) {
             let texture = new THREE.TextureLoader().load(d.iconUrl);
@@ -90,6 +83,7 @@ class BaseObject {
             o.add(icon)
 
             this.icon = icon
+            this.icon.__rootParent = this
         }
 
         // 坐标轴
@@ -293,12 +287,26 @@ top: -60px;
     removeCssTip() {
         if (this.tip.tipObject) {
             this.mesh.remove(this.tip.tipObject)
+            this.world.timerRender()
         }
     }
     restoreCssTip() {
         if (this.tip.tipObject) {
             this.mesh.add(this.tip.tipObject)
+            this.world.timerRender()
         }
+    }
+    toggleCssTip() {
+        if (!this.tip.tipObject) {
+            return
+        }
+
+        if (this.tip.tipObject.parent) {
+            this.removeCssTip()
+        } else {
+            this.restoreCssTip()
+        }
+        this.world.timerRender()
     }
 
     restore() {
@@ -324,8 +332,10 @@ class BaseObjectHub {
 
         this.name = name
 
+        this.world = World.getInstance()
+
         this.rootGroup = new THREE.Group()
-        World.getInstance().three.scene.add(this.rootGroup)
+        this.world.three.scene.add(this.rootGroup)
 
         this.indexObjectID = new Map()
 
@@ -376,6 +386,22 @@ class BaseObjectHub {
         this.indexObjectID.forEach(o => {
             o.restoreCssTip()
         })
+    }
+
+    pick(x, y) {
+
+        const intersects = this.world.pick(x, y, this.rootGroup.children);
+
+        let objects = []
+
+        intersects.forEach( i => {
+            if (i.object.__rootParent) {
+                objects.push(i.object.__rootParent)
+            }
+        })
+
+        return objects
+
     }
 
 }

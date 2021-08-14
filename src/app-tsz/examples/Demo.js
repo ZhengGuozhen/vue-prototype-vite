@@ -16,7 +16,7 @@ class Demo {
 
 
         console.time('批量创建object')
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 10; i++) {
             let o = new BaseObject(new BaseObjectData({
                 id: 'BaseObject-' + i,
                 position: [114 + i / 10, 30, 0]
@@ -26,7 +26,7 @@ class Demo {
         console.timeEnd('批量创建object')
 
         console.time('批量创建object')
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 5; i++) {
             let o = new TrackObject(new BaseObjectData({
                 id: 'TrackObject-' + i,
                 position: [114 + i / 10, 20, 0]
@@ -36,7 +36,7 @@ class Demo {
         console.timeEnd('批量创建object')
 
         console.time('批量创建object')
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 5; i++) {
             let o = new EventObject(new BaseObjectData({
                 id: 'EventObject-' + i,
                 position: [114 + i / 10, 10, 0]

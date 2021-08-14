@@ -19,12 +19,14 @@ class World {
             renderer2: null,
             camera: null,
             scene: null,
+            raycaster: null,
             stats: new Stats()
         }
 
         this.cesium = {
             viewer: null
         }
+        this.ScreenSpaceEventType = Cesium.ScreenSpaceEventType
 
         this.cesiumContainer = null
         this.threeContainer = null
@@ -149,36 +151,49 @@ class World {
         })
 
         // 鼠标事件
+        // this.addScreenSpaceEventHandler((e) => {
+        //     that.coordinates(e)
+        // }, this.ScreenSpaceEventType.LEFT_CLICK)
+    }
+
+    addScreenSpaceEventHandler(cb, eventType) {
+
         let handler = new Cesium.ScreenSpaceEventHandler(this.cesium.viewer.canvas);
+
         handler.setInputAction((event) => {
-            let viewer = this.cesium.viewer
 
-            // 点击点世界坐标 
-            let cartesian = viewer.camera.pickEllipsoid(event.position, viewer.scene.globe.ellipsoid);
-            console.log('点击点世界坐标', cartesian);
+            cb(event)
 
-            // 点击点经纬度
-            let cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-            let lon = Cesium.Math.toDegrees(cartographic.longitude);
-            let lat = Cesium.Math.toDegrees(cartographic.latitude);
-            console.log('点击点经纬度', lon, lat);
+        }, eventType);
 
-            // 经纬度坐标转世界坐标
-            let posWorld = Cesium.Cartesian3.fromDegrees(lon, lat);
-            console.log('经纬度转世界坐标', posWorld)
+    }
 
-            // 世界坐标转屏幕坐标，两种方法
-            let r = viewer.scene.cartesianToCanvasCoordinates(posWorld)
-            let r2 = Cesium.SceneTransforms.wgs84ToWindowCoordinates(viewer.scene, posWorld)
-            console.log('世界坐标转屏幕坐标', r, r2)
+    coordinates(event) {
+        let viewer = this.cesium.viewer
 
-            // 屏幕转世界坐标
-            let cartesian3 = viewer.scene.globe.pick(
-                viewer.camera.getPickRay(r), viewer.scene);
-            console.log('屏幕转世界坐标', cartesian3)
+        // 点击点世界坐标 
+        let cartesian = viewer.camera.pickEllipsoid(event.position, viewer.scene.globe.ellipsoid);
+        console.log('点击点世界坐标', cartesian);
 
-        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        // 点击点经纬度
+        let cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+        let lon = Cesium.Math.toDegrees(cartographic.longitude);
+        let lat = Cesium.Math.toDegrees(cartographic.latitude);
+        console.log('点击点经纬度', lon, lat);
 
+        // 经纬度坐标转世界坐标
+        let posWorld = Cesium.Cartesian3.fromDegrees(lon, lat);
+        console.log('经纬度转世界坐标', posWorld)
+
+        // 世界坐标转屏幕坐标，两种方法
+        let r = viewer.scene.cartesianToCanvasCoordinates(posWorld)
+        let r2 = Cesium.SceneTransforms.wgs84ToWindowCoordinates(viewer.scene, posWorld)
+        console.log('世界坐标转屏幕坐标', r, r2)
+
+        // 屏幕转世界坐标
+        let cartesian3 = viewer.scene.globe.pick(
+            viewer.camera.getPickRay(r), viewer.scene);
+        console.log('屏幕转世界坐标', cartesian3)
     }
 
     flyTo(longitude, latitude, height) {
@@ -213,6 +228,7 @@ class World {
         // camera
         this.three.camera = new THREE.PerspectiveCamera(fov, aspect, near, far)
         this.three.camera.aspect = aspect
+        this.three.camera.fov = Cesium.Math.toDegrees(this.cesium.viewer.camera.frustum.fovy) // ThreeJS FOV is vertical
         this.three.camera.updateProjectionMatrix()
 
         // renderer1
@@ -239,6 +255,9 @@ class World {
         // this.three.renderer.localClippingEnabled = true;
 
         // 
+        this.three.raycaster = new THREE.Raycaster()
+
+        // 
         let that = this;
         window.addEventListener('resize', () => {
             that.onWindowResize()
@@ -254,6 +273,8 @@ class World {
         console.log('onWindowResize', width, width)
 
         this.three.camera.aspect = aspect
+        this.three.camera.updateProjectionMatrix()
+
         this.three.renderer.setSize(width, height)
         this.three.renderer2.setSize(width, height)
     }
@@ -263,8 +284,9 @@ class World {
     }
 
     renderThree() {
-        this.three.camera.fov = Cesium.Math.toDegrees(this.cesium.viewer.camera.frustum.fovy) // ThreeJS FOV is vertical
-        this.three.camera.updateProjectionMatrix();
+
+        // this.three.camera.fov = Cesium.Math.toDegrees(this.cesium.viewer.camera.frustum.fovy) // ThreeJS FOV is vertical
+        // this.three.camera.updateProjectionMatrix();
 
         this.three.camera.matrixAutoUpdate = false;
         let cvm = this.cesium.viewer.camera.viewMatrix;
@@ -281,16 +303,22 @@ class World {
             cvm[2], cvm[6], cvm[10], cvm[14],
             cvm[3], cvm[7], cvm[11], cvm[15]
         );
-        // three.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-        
+        // 另一种方式对齐 camera，仅在地球仪视角有效
+        // let c = this.cesium.viewer.camera
+        // let c_ = this.three.camera
+        // c_.position.set(c.positionWC.x, c.positionWC.y, c.positionWC.z)
+        // c_.lookAt(c.directionWC.x, c.directionWC.y, c.directionWC.z)
+        // c_.up.set(c.upWC.x, c.upWC.y, c.upWC.z)
+        // this.three.camera.updateProjectionMatrix();
+
         // 裁切面
         let v = this.cesium.viewer.camera.position
         this.three.renderer.clippingPlanes[0].set(new THREE.Vector3(v.x, v.y, v.z), 0)
 
-
         this.three.renderer.render(this.three.scene, this.three.camera);
         this.three.renderer2.render(this.three.scene, this.three.camera);
+
     }
 
     render() {
@@ -333,6 +361,25 @@ class World {
         // 
         this.event_view_changed.detail.mode = viewer.scene.mode
         window.dispatchEvent(this.event_view_changed)
+
+    }
+
+    pick(x, y, objects = this.three.scene.children) {
+
+        const pointer = new THREE.Vector2();
+        pointer.x = (x / this.threeContainer.clientWidth) * 2 - 1;
+        pointer.y = - (y / this.threeContainer.clientHeight) * 2 + 1;
+
+        this.three.raycaster.setFromCamera(pointer, this.three.camera);
+
+        const intersects = this.three.raycaster.intersectObjects(objects, true);
+
+        // let target = null
+        // if (intersects.length > 0) {
+        //     target = intersects[0].object
+        // }
+
+        return intersects
 
     }
     // ======================================
