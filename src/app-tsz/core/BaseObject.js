@@ -5,6 +5,7 @@ import { v4 as uuid } from 'uuid'
 
 import * as Cesium from 'cesium'
 import World from './World.js'
+import Resource from './Resource.js'
 
 class BaseObjectData {
 
@@ -46,6 +47,7 @@ class BaseObject {
         this.mesh.__rootParent = this
 
         // 
+        this.resource = Resource.getInstance()
         this.world = World.getInstance()
         this.cesium = this.world.cesium
         this.three = this.world.three
@@ -71,11 +73,8 @@ class BaseObject {
 
         // 平面
         if (d.iconUrl) {
-            let texture = new THREE.TextureLoader().load(d.iconUrl);
-            let material = new THREE.MeshBasicMaterial({ map: texture });
-
-            let geometry = new THREE.PlaneBufferGeometry(1, 1)
-            geometry.rotateX(- Math.PI / 2)
+            let material = this.resource.getMaterial('国旗');
+            let geometry = this.resource.getGeometry('plane')
 
             let icon = new THREE.Mesh(geometry, material);
             icon.scale.set(1, 1, 1);
@@ -394,7 +393,7 @@ class BaseObjectHub {
 
         let objects = []
 
-        intersects.forEach( i => {
+        intersects.forEach(i => {
             if (i.object.__rootParent) {
                 objects.push(i.object.__rootParent)
             }

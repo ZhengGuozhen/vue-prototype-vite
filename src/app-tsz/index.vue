@@ -53,30 +53,29 @@ export default defineComponent({
       {
         label: '3D/2D',
         action: (o) => {
-          o.BaseObjectHub.removeCssTipAll()
           o.world.changeView()
         }
       },
       {
-        label: '移除Tip',
+        label: '移除所有Tip',
         action: (o) => {
           o.BaseObjectHub.removeCssTipAll()
         }
       },
       {
-        label: '恢复Tip',
+        label: '恢复所有Tip',
         action: (o) => {
           o.BaseObjectHub.restoreCssTipAll()
         }
       },
       {
-        label: '移除',
+        label: '移除所有Object',
         action: (o) => {
           o.BaseObjectHub.removeAll()
         }
       },
       {
-        label: '恢复',
+        label: '恢复所有Object',
         action: (o) => {
           o.BaseObjectHub.restoreAll()
         }

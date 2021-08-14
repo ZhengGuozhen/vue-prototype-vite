@@ -12,6 +12,15 @@ import * as Cesium from 'cesium'
 
 class World {
 
+    static instance = null
+    static getInstance() {
+        if (!World.instance) {
+            console.warn('new World Instance')
+            World.instance = new World()
+        }
+        return World.instance
+    }
+
     constructor() {
 
         this.three = {
@@ -44,15 +53,6 @@ class World {
             }
         });
 
-    }
-
-    static instance = null
-    static getInstance() {
-        if (!World.instance) {
-            console.warn('new World Instance')
-            World.instance = new World()
-        }
-        return World.instance
     }
 
     init(el) {
