@@ -38,7 +38,7 @@ import '@/../node_modules/cesium/Build/Cesium/Widgets/widgets.css'
 import Demo from './examples/Demo.js'
 
 export default defineComponent({
-  name: 'CesiumDemo',
+  name: 'TSZ',
 
   setup() {
     const rootContainer = ref(null)

@@ -15,7 +15,7 @@ class BaseObjectData {
         this.position = [114, 30, 0]
         this.fixedSize = true
         this.size = 0.05
-        
+
         this.cssTip = {
             show: true,
             defaultValue: this.id
@@ -143,7 +143,7 @@ class BaseObject {
 
         }
 
-        // 球面另一边不显示
+        // 地球背面不显示
         if (this.cesium.viewer.scene.mode === Cesium.SceneMode.SCENE3D) {
 
             let cameraPos = this.cesium.viewer.camera.positionCartographic
@@ -161,10 +161,18 @@ class BaseObject {
                 object_at_front = true
             }
 
-            if (object_at_front !== this.__cache__object_at_front) {
-                object_at_front ? this.restoreCssTip() : this.removeCssTip()
+            // 当前 cssTip 显隐状态
+            let cssTipShow = this.tip.tipObject.parent
+            
+            if (!object_at_front && cssTipShow) {
+                this.removeCssTip()
+                this.__cache__进入背面时临时隐藏CssTip = true
             }
-            this.__cache__object_at_front = object_at_front
+
+            if (object_at_front && this.__cache__进入背面时临时隐藏CssTip) {
+                this.restoreCssTip()
+                this.__cache__进入背面时临时隐藏CssTip = false
+            }
 
         }
 
@@ -201,10 +209,6 @@ class BaseObject {
 
         }
 
-    }
-
-    rotateIcon(course) {
-        this.icon.rotation.set(0, - course * Math.PI / 180, 0)
     }
 
     addCssTip() {
@@ -294,19 +298,28 @@ top: -60px;
 
     }
 
-    removeCssTip() {
+
+    rotateIcon(course, r = false) {
+        this.icon.rotation.set(0, - course * Math.PI / 180, 0)
+
+        if (r) { this.world.timerRender() }
+    }
+
+    removeCssTip(r = false) {
         if (this.tip.tipObject) {
             this.mesh.remove(this.tip.tipObject)
-            this.world.timerRender()
+
+            if (r) { this.world.timerRender() }
         }
     }
-    restoreCssTip() {
+    restoreCssTip(r = false) {
         if (this.tip.tipObject) {
             this.mesh.add(this.tip.tipObject)
-            this.world.timerRender()
+
+            if (r) { this.world.timerRender() }
         }
     }
-    toggleCssTip() {
+    toggleCssTip(r = false) {
         if (!this.tip.tipObject) {
             return
         }
@@ -316,20 +329,26 @@ top: -60px;
         } else {
             this.restoreCssTip()
         }
+
+        if (r) { this.world.timerRender() }
     }
 
-    restore() {
+    restore(r = false) {
         if (this.hub) {
             this.hub.rootGroup.add(this.mesh)
         } else {
             this.three.scene.add(this.mesh)
         }
         this.restoreCssTip()
+
+        if (r) { this.world.timerRender() }
     }
-    remove() {
+    remove(r = false) {
         if (this.mesh.parent) {
             this.mesh.parent.remove(this.mesh)
             this.removeCssTip()
+
+            if (r) { this.world.timerRender() }
         }
     }
 
@@ -356,6 +375,8 @@ class BaseObjectHub {
         } else {
             World.getInstance().three.scene.remove(this.rootGroup)
         }
+
+        this.world.timerRender()
     }
 
     addObject(o) {
@@ -377,24 +398,32 @@ class BaseObjectHub {
         this.indexObjectID.forEach(o => {
             o.remove()
         })
+
+        this.world.timerRender()
     }
 
     restoreAll() {
         this.indexObjectID.forEach(o => {
             o.restore()
         })
+
+        this.world.timerRender()
     }
 
     removeCssTipAll() {
         this.indexObjectID.forEach(o => {
             o.removeCssTip()
         })
+
+        this.world.timerRender()
     }
 
     restoreCssTipAll() {
         this.indexObjectID.forEach(o => {
             o.restoreCssTip()
         })
+
+        this.world.timerRender()
     }
 
     pick(x, y) {

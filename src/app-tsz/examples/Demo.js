@@ -47,7 +47,7 @@ class Demo {
         console.timeEnd('批量创建object')
 
 
-        this.world.timerRender()
+        this.world.timerRender(3000)
 
     }
 
