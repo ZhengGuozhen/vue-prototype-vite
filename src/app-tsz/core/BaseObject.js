@@ -108,14 +108,14 @@ class BaseObject {
 
     onMeshBeforeRender() {
 
-        // 切换 scene.mode 时执行一次
+        // 对齐，切换 scene.mode 时执行一次
         if (this.currentViewerSceneMode !== this.cesium.viewer.scene.mode) {
             this.dq()
             this.currentViewerSceneMode = this.cesium.viewer.scene.mode
         }
 
-        // resize
-        if (this.__data.fixedSize) {
+        // resize, zooming 时执行
+        if (this.__data.fixedSize && this.world.isCameraZooming) {
 
             let o = this.mesh
 
@@ -125,7 +125,7 @@ class BaseObject {
 
             if (mode === Cesium.SceneMode.SCENE3D) {
 
-                // 计算 object 到 camera 平面的距离，可用，准确
+                // 根据 object 到 camera 平面的距离计算，可用，准确
                 let camera = this.cesium.viewer.camera
                 let cameraPlane = Cesium.Plane.fromPointNormal(camera.position, camera.directionWC)
                 let pos = new Cesium.Cartesian3(o.position.x, o.position.y, o.position.z)
@@ -135,6 +135,7 @@ class BaseObject {
 
             } else if (mode === Cesium.SceneMode.COLUMBUS_VIEW) {
 
+                // 根据 camera 高度计算，仅适用于 camera 方向垂直向下的情况
                 let cameraHeight = this.cesium.viewer.camera.positionCartographic.height
                 let scale = cameraHeight * factor;
                 o.scale.set(scale, scale, scale);

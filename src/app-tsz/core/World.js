@@ -88,6 +88,8 @@ class World {
 
         this.three.scene.add(new THREE.AxesHelper(1e7));
 
+        this.isCameraZooming = false
+
     }
 
     // ======================================
@@ -146,14 +148,17 @@ class World {
         this.cesium.viewer.camera.changed.addEventListener(() => {
             // Gets the event that will be raised when the camera has changed by percentageChanged
             // console.log('camera changed')
+
             that.timerRender()
         })
         this.cesium.viewer.camera.moveStart.addEventListener(() => {
             // console.log('camera moveStart')
+
             that.timerRender()
         })
         this.cesium.viewer.camera.moveEnd.addEventListener(() => {
             // console.log('camera moveEnd')
+
             that.timerRender()
         })
 
@@ -161,6 +166,9 @@ class World {
         // this.addScreenSpaceEventHandler((e) => {
         //     that.coordinates(e)
         // }, this.ScreenSpaceEventType.LEFT_CLICK)
+        // this.addScreenSpaceEventHandler((e) => {
+        // }, this.ScreenSpaceEventType.WHEEL)
+
     }
 
     addScreenSpaceEventHandler(cb, eventType) {
@@ -215,6 +223,44 @@ class World {
             duration: 3
         })
     }
+
+    // 
+    checkCameraZooming() {
+
+        let viewer = this.cesium.viewer
+
+        if (viewer.scene.mode === Cesium.SceneMode.SCENE3D) {
+
+            let d = Math.floor(
+                Cesium.Cartesian3.distanceSquared(
+                    this.cesium.viewer.camera.position,
+                    new Cesium.Cartesian3()))
+
+            if (d !== this.__cache__cameraDistance) {
+                this.isCameraZooming = true
+            } else {
+                this.isCameraZooming = false
+            }
+
+            this.__cache__cameraDistance = d
+
+        } else {
+
+            let d = Math.floor(viewer.camera.positionCartographic.height)
+
+            if (d !== this.__cache__cameraHeight) {
+                this.isCameraZooming = true
+            } else {
+                this.isCameraZooming = false
+            }
+
+            this.__cache__cameraHeight = d
+
+        }
+
+        if (this.isCameraZooming) { console.warn('CameraZooming') }
+
+    }
     // ======================================
 
     // ======================================
@@ -234,6 +280,7 @@ class World {
 
         // camera
         this.three.camera = new THREE.PerspectiveCamera(fov, aspect, near, far)
+        this.three.camera.matrixAutoUpdate = false;
         this.three.camera.aspect = aspect
         this.three.camera.fov = Cesium.Math.toDegrees(this.cesium.viewer.camera.frustum.fovy) // ThreeJS FOV is vertical
         this.three.camera.updateProjectionMatrix()
@@ -295,8 +342,19 @@ class World {
 
         // this.three.camera.fov = Cesium.Math.toDegrees(this.cesium.viewer.camera.frustum.fovy) // ThreeJS FOV is vertical
         // this.three.camera.updateProjectionMatrix();
+        // this.three.camera.matrixAutoUpdate = false;
 
-        this.three.camera.matrixAutoUpdate = false;
+        // 裁切面
+        let v = this.cesium.viewer.camera.position
+        this.three.renderer.clippingPlanes[0].set(new THREE.Vector3(v.x, v.y, v.z), 0)
+
+        this.three.renderer.render(this.three.scene, this.three.camera);
+        this.three.renderer2.render(this.three.scene, this.three.camera);
+
+    }
+
+    dqCamera() {
+
         let cvm = this.cesium.viewer.camera.viewMatrix;
         let civm = this.cesium.viewer.camera.inverseViewMatrix;
         this.three.camera.matrixWorld.set(
@@ -320,20 +378,23 @@ class World {
         // c_.up.set(c.upWC.x, c.upWC.y, c.upWC.z)
         // this.three.camera.updateProjectionMatrix();
 
-        // 裁切面
-        let v = this.cesium.viewer.camera.position
-        this.three.renderer.clippingPlanes[0].set(new THREE.Vector3(v.x, v.y, v.z), 0)
-
-        this.three.renderer.render(this.three.scene, this.three.camera);
-        this.three.renderer2.render(this.three.scene, this.three.camera);
-
     }
 
     render() {
+
         this.renderCesium();
+
+        // 稳平移
+        this.dqCamera()
+
         if (this.renderEnable) {
+            this.checkCameraZooming()
             this.renderThree();
         }
+
+        // 稳缩放
+        // this.dqCamera()
+
     }
 
     timerRender(time = 1000) {
@@ -400,7 +461,7 @@ class World {
         let o
         object ? o = object : o = this.three.scene
 
-        const factor = 0.1
+        const factor = 0.0001
 
         // 弃用
         /*
@@ -428,9 +489,9 @@ class World {
         o.traverseVisible(o => {
 
             if (
-                o.__data &&
-                o.__data.config &&
-                o.__data.config.fixedSize
+                o.__rootParent &&
+                o.__rootParent.__data &&
+                o.__rootParent.__data.fixedSize
             ) {
                 // 计算 object 相对于 camera 的 position
                 // 由于直接修改了 cemare 的矩阵，camera.position 不正确，此法不可用
