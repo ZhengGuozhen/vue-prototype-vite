@@ -395,6 +395,12 @@ class World {
         // 稳缩放
         // this.dqCamera()
 
+        // 稳平移、稳缩放不可兼得
+
+        // 下列写法可以同时 稳平移、稳缩放，但是牺牲效率
+        // this.dqCamera()
+        // this.renderThree()
+
     }
 
     timerRender(time = 1000) {
