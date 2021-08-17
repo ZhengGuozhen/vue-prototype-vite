@@ -35,7 +35,10 @@ class World {
             renderer2: null,
             camera: null,
             scene: null,
+
             raycaster: null,
+            globalClippingPlanes: [],
+
             stats: new Stats()
         }
 
@@ -231,17 +234,17 @@ class World {
         if (viewer.scene.mode === Cesium.SceneMode.SCENE3D) {
 
             let d = Math.floor(
-                Cesium.Cartesian3.distanceSquared(
+                Cesium.Cartesian3.distance(
                     this.cesium.viewer.camera.position,
-                    new Cesium.Cartesian3()))
+                    new Cesium.Cartesian3(0, 0, 0)))
 
-            if (d !== this.__cache__cameraDistance) {
+            if (d !== this.__cache__cameraDistanceToCenter) {
                 this.isCameraZooming = true
             } else {
                 this.isCameraZooming = false
             }
 
-            this.__cache__cameraDistance = d
+            this.__cache__cameraDistanceToCenter = d
 
         } else {
 
@@ -301,10 +304,8 @@ class World {
         this.threeContainer.appendChild(this.three.renderer2.domElement)
 
         // 
-        const globalClippingPlanes = [
-            new THREE.Plane(new THREE.Vector3(0, 0, -1), 0)
-        ]
-        this.three.renderer.clippingPlanes = globalClippingPlanes;
+        this.three.globalClippingPlanes = []
+        this.three.renderer.clippingPlanes = this.three.globalClippingPlanes;
         // this.three.renderer.localClippingEnabled = true;
 
         // 
@@ -343,9 +344,30 @@ class World {
         // this.three.camera.updateProjectionMatrix();
         // this.three.camera.matrixAutoUpdate = false;
 
-        // 裁切面
-        let v = this.cesium.viewer.camera.position
-        this.three.renderer.clippingPlanes[0].set(new THREE.Vector3(v.x, v.y, v.z), 0)
+        // 裁切面，只适用于地表的物体
+        if (this.cesium.viewer.scene.mode === Cesium.SceneMode.SCENE3D) {
+
+            if (this.three.globalClippingPlanes.length === 0) {
+
+                this.three.globalClippingPlanes[0] = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0)
+            
+            }
+
+            let v = this.cesium.viewer.camera.position
+            const r = Cesium.Ellipsoid.WGS84.minimumRadius
+            let l = r * r / this.__cache__cameraDistanceToCenter
+
+            this.three.globalClippingPlanes[0].set((new THREE.Vector3(v.x, v.y, v.z)).normalize(), -l)
+        
+        } else {
+
+            if (this.three.globalClippingPlanes.length > 0) {
+
+                this.three.globalClippingPlanes.length = 0
+
+            }
+            
+        }
 
         this.three.renderer.render(this.three.scene, this.three.camera);
         this.three.renderer2.render(this.three.scene, this.three.camera);

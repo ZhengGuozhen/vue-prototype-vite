@@ -163,7 +163,7 @@ class BaseObject {
             this.__cache__resized = true
         }
 
-        // 地球背面不显示
+        // 地平线背面不显示
         if (this.cesium.viewer.scene.mode === Cesium.SceneMode.SCENE3D) {
 
             let cameraPos = this.cesium.viewer.camera.positionCartographic
@@ -172,10 +172,12 @@ class BaseObject {
             let a = new THREE.Vector3(cameraPos_.x, cameraPos_.y, cameraPos_.z)
             let b = this.mesh.position
             let d = a.distanceTo(b)
-            const r = 6378137 * 1.414
+
+            const r = Cesium.Ellipsoid.WGS84.minimumRadius
+            let max = Math.sin(Math.acos(r / this.world.__cache__cameraDistanceToCenter) / 2) * r * 2
 
             let object_at_front
-            if (d > r) {
+            if (d > max) {
                 object_at_front = false
             } else {
                 object_at_front = true
@@ -243,7 +245,7 @@ class BaseObject {
             let pos_ = Cesium.Cartesian3.fromDegrees(...pos);
 
             o.position.set(pos_.x, pos_.y, pos_.z)
-            o.up.set(0, 0, -6378137)
+            o.up.set(0, 0, - Cesium.Ellipsoid.WGS84.minimumRadius)
             o.lookAt(new THREE.Vector3(0, 0, 0));
             o.rotateX(-Math.PI / 2)
 
