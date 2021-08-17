@@ -71,6 +71,47 @@ class BaseObject {
 
         this.init(d)
 
+
+        // test ================================
+        // cesium entity 不适合进行动态操作
+        const entity = {
+            name: 'entity-0',
+            position: Cesium.Cartesian3.fromDegrees(...d.position),
+            ellipse: {
+                semiMinorAxis: 5000,
+                semiMajorAxis: 8000,
+                fill: false,
+                outline: true,
+                outlineColor: Cesium.Color.YELLOW,
+                outlineWidth: 2.0,
+                // material: Cesium.Color.BLUE.withAlpha(0.5)
+                material: '/image/flag_cn.png',
+                rotation: -Math.PI/4
+            },
+            // polygon: {
+            //     hierarchy: Cesium.Cartesian3.fromDegreesArray([
+            //         d.position[0] - 1, d.position[1] - 1,
+            //         d.position[0] + 1, d.position[1] - 1,
+            //         d.position[0] + 1, d.position[1] + 1,
+            //         d.position[0] - 1, d.position[1] + 1,
+            //     ]),
+            //     material: Cesium.Color.RED.withAlpha(0.2)
+            // },
+            // billboard: {
+            //     image: '/image/flag_cn.png',
+            //     width: 64,
+            //     height: 64,
+            //     rotation: -Math.PI/4
+            // }
+        };
+        this.entity = this.cesium.viewer.entities.add(entity);
+
+        // 精灵对象不正常，与 three camera 有关
+        const sprite = new THREE.Sprite(this.resource.getMaterialTexture(d.icon.url));
+        sprite.scale.set(5, 5, 5)
+        this.mesh.add(sprite);
+        // test ================================
+
     }
 
     init(d) {
@@ -164,7 +205,7 @@ class BaseObject {
 
             // 当前 cssTip 显隐状态
             let cssTipShow = this.tip.tipObject.parent
-            
+
             if (!object_at_front && cssTipShow) {
                 this.removeCssTip()
                 this.__cache__进入背面时临时隐藏CssTip = true

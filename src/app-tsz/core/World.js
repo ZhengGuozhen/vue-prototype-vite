@@ -374,7 +374,7 @@ class World {
         // let c = this.cesium.viewer.camera
         // let c_ = this.three.camera
         // c_.position.set(c.positionWC.x, c.positionWC.y, c.positionWC.z)
-        // c_.lookAt(c.directionWC.x, c.directionWC.y, c.directionWC.z)
+        // c_.lookAt(new THREE.Vector3(c.directionWC.x, c.directionWC.y, c.directionWC.z))
         // c_.up.set(c.upWC.x, c.upWC.y, c.upWC.z)
         // this.three.camera.updateProjectionMatrix();
 
@@ -384,12 +384,15 @@ class World {
 
         this.renderCesium();
 
-        // 稳平移
-        this.dqCamera()
-
         if (this.renderEnable) {
+
+            // 稳平移
+            this.dqCamera()
+
             this.checkCameraZooming()
+            
             this.renderThree();
+
         }
 
         // 稳缩放
