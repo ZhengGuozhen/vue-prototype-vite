@@ -54,7 +54,7 @@ class World {
         this.renderEnable = false
         this.renderTimeoutID = null
 
-        this.defaultPosition = [114.43, 30.41, 100000]
+        this.defaultPosition = [114.43, 30.41, 1000000]
 
         // event
         this.event_view_changed = new CustomEvent('event_view_changed', {
@@ -223,7 +223,7 @@ class World {
             //     pitch: Cesium.Math.toRadians(-60),
             //     roll: Cesium.Math.toRadians(0)
             // },
-            duration: 3
+            duration: 1
         })
     }
 
@@ -418,10 +418,10 @@ class World {
 
         }
 
+        // 由 obejct 在 onBeforeRender 中处理 resize 时:
         // 稳平移，dqCamera 在 renderThree 之前
         // 稳缩放，dqCamera 在 renderThree 之后
         // 稳平移、稳缩放不可兼得
-
         // 下列写法可以同时 稳平移、稳缩放，但是牺牲效率
         // this.dqCamera()
         // this.renderThree()
@@ -459,6 +459,9 @@ class World {
             viewer.scene.mode = Cesium.SceneMode.SCENE3D
 
         }
+
+        // todo 切换时会有偶发的显示错误，暂时使用 flyTo 修复
+        this.flyTo(...this.defaultPosition)
 
         // 
         this.event_view_changed.detail.mode = viewer.scene.mode
