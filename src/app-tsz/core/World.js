@@ -386,7 +386,6 @@ class World {
 
         if (this.renderEnable) {
 
-            // 稳平移
             this.dqCamera()
 
             this.checkCameraZooming()
@@ -395,12 +394,13 @@ class World {
 
         }
 
-        // 稳缩放
-        // this.dqCamera()
-
+        // 稳平移，dqCamera 在 renderThree 之前
+        // 稳缩放，dqCamera 在 renderThree 之后
         // 稳平移、稳缩放不可兼得
 
         // 下列写法可以同时 稳平移、稳缩放，但是牺牲效率
+        // this.dqCamera()
+        // this.renderThree()
         // this.dqCamera()
         // this.renderThree()
 

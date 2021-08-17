@@ -107,9 +107,10 @@ class BaseObject {
         this.entity = this.cesium.viewer.entities.add(entity);
 
         // 精灵对象不正常，与 three camera 有关
-        const sprite = new THREE.Sprite(this.resource.getMaterialTexture(d.icon.url));
-        sprite.scale.set(5, 5, 5)
-        this.mesh.add(sprite);
+        // const sprite = new THREE.Sprite(this.resource.getMaterialTexture(d.icon.url));
+        // sprite.scale.set(5, 5, 5)
+        // this.mesh.add(sprite);
+        
         // test ================================
 
     }
