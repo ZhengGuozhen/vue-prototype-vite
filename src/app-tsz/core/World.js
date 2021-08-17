@@ -224,7 +224,6 @@ class World {
         })
     }
 
-    // 
     checkCameraZooming() {
 
         let viewer = this.cesium.viewer
@@ -258,7 +257,7 @@ class World {
 
         }
 
-        if (this.isCameraZooming) { console.warn('CameraZooming') }
+        // if (this.isCameraZooming) { console.warn('CameraZooming') }
 
     }
     // ======================================
@@ -389,7 +388,10 @@ class World {
             this.dqCamera()
 
             this.checkCameraZooming()
-            
+            if (this.isCameraZooming) {
+                this.resizeObjects()
+            }
+
             this.renderThree();
 
         }
@@ -460,89 +462,27 @@ class World {
         return intersects
 
     }
-    // ======================================
 
+    // 在这里处理效果完美，由 obejct 在 onBeforeRender 中处理 resize 会导致快速缩放时有残影
+    resizeObjects() {
 
+        // let cameraHeight = this.cesium.viewer.camera.positionCartographic.height
 
-    // 弃用，由 obejct 自己管理 resize
-    resizeObjects(object) {
-
-        let o
-        object ? o = object : o = this.three.scene
-
-        const factor = 0.0001
-
-        // 弃用
-        /*
-        let cameraHeight = 1
-        let mode = this.cesium.viewer.scene.mode
-        if (mode === Cesium.SceneMode.SCENE3D) {
-            // cemera 高度，3种方法
-            // let ellipsoid = this.cesium.viewer.scene.globe.ellipsoid;
-            // let cameraHeight = ellipsoid.cartesianToCartographic(this.cesium.viewer.camera.position).height;
-            
-            // let cartographic = Cesium.Cartographic.fromCartesian(this.cesium.viewer.camera.position)
-            // cameraHeight = cartographic.height
-
-            cameraHeight = this.cesium.viewer.camera.positionCartographic.height
-
-        } else if (mode === Cesium.SceneMode.COLUMBUS_VIEW) {
-            cameraHeight = this.cesium.viewer.camera.position.z
-        }
-        */
-
-        let cameraHeight = this.cesium.viewer.camera.positionCartographic.height
-
-        console.time('resizeObjects cameraHeight:' + cameraHeight)
-
-        o.traverseVisible(o => {
+        this.three.scene.traverseVisible(o => {
 
             if (
-                o.__rootParent &&
-                o.__rootParent.__data &&
-                o.__rootParent.__data.fixedSize
+                o.__tag === 'rootMesh' &&
+                o.__rootParent
             ) {
-                // 计算 object 相对于 camera 的 position
-                // 由于直接修改了 cemare 的矩阵，camera.position 不正确，此法不可用
-                // let v = new THREE.Vector3();
-                // let distanceToCamera = v.subVectors(o.position, this.three.camera.position).length()
-
-                // 计算 object 相对于 camera 的 position，可用，较慢
-                // let m = new THREE.Matrix4()
-                // m.multiplyMatrices(this.three.camera.matrixWorldInverse, o.matrixWorld);
-                // let position = new THREE.Vector3();
-                // position.setFromMatrixPosition(m)
-                // let distanceToCamera = position.length()
-                // let scale = distanceToCamera * factor;
-                // o.scale.set(scale, scale, scale);
-
-                // 计算 object 相对于 camera 的 position，可用，较快
-                // let cameraPos = this.cesium.viewer.camera.position
-                // let cameraPos_ = new THREE.Vector3(cameraPos.x, cameraPos.y, cameraPos.z)
-                // let v = new THREE.Vector3();
-                // let distanceToCamera = v.subVectors(
-                //     o.position, cameraPos_).length()
-                // let scale = distanceToCamera * factor;
-                // o.scale.set(scale, scale, scale);
-
-                // 计算 object 到 camera 平面的距离，可用，准确
-                let camera = this.cesium.viewer.camera
-                let cameraPlane = Cesium.Plane.fromPointNormal(camera.position, camera.directionWC)
-                let pos = new Cesium.Cartesian3(o.position.x, o.position.y, o.position.z)
-                let distance = Cesium.Plane.getPointDistance(cameraPlane, pos)
-                let scale = distance * factor;
-                o.scale.set(scale, scale, scale);
-
-                // 计算 cemera 相对地表的高度，可用，快速，但是旋转视角后结果错误
-                // let scale = cameraHeight * factor;
-                // o.scale.set(scale, scale, scale);
+                o.__rootParent.resizeToFixedSize()
             }
 
         })
 
-        console.timeEnd('resizeObjects cameraHeight:' + cameraHeight)
+        console.warn('resizeObjects')
 
     }
+    // ======================================
 
 }
 

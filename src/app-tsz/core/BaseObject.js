@@ -52,6 +52,7 @@ class BaseObject {
             that.onMeshBeforeRender()
         }
         this.mesh.__rootParent = this
+        this.mesh.__tag = 'rootMesh'
 
         // 
         this.resource = Resource.getInstance()
@@ -86,7 +87,7 @@ class BaseObject {
                 outlineWidth: 2.0,
                 // material: Cesium.Color.BLUE.withAlpha(0.5)
                 material: '/image/flag_cn.png',
-                rotation: -Math.PI/4
+                rotation: -Math.PI / 4
             },
             // polygon: {
             //     hierarchy: Cesium.Cartesian3.fromDegreesArray([
@@ -110,7 +111,7 @@ class BaseObject {
         // const sprite = new THREE.Sprite(this.resource.getMaterialTexture(d.icon.url));
         // sprite.scale.set(5, 5, 5)
         // this.mesh.add(sprite);
-        
+
         // test ================================
 
     }
@@ -156,34 +157,10 @@ class BaseObject {
             this.currentViewerSceneMode = this.cesium.viewer.scene.mode
         }
 
-        // resize, zooming 时执行
-        if (this.__data.fixedSize && this.world.isCameraZooming) {
-
-            let o = this.mesh
-
-            let factor = this.__data.size
-
-            let mode = this.cesium.viewer.scene.mode
-
-            if (mode === Cesium.SceneMode.SCENE3D) {
-
-                // 根据 object 到 camera 平面的距离计算，可用，准确
-                let camera = this.cesium.viewer.camera
-                let cameraPlane = Cesium.Plane.fromPointNormal(camera.position, camera.directionWC)
-                let pos = new Cesium.Cartesian3(o.position.x, o.position.y, o.position.z)
-                let distance = Cesium.Plane.getPointDistance(cameraPlane, pos)
-                let scale = distance * factor;
-                o.scale.set(scale, scale, scale);
-
-            } else if (mode === Cesium.SceneMode.COLUMBUS_VIEW) {
-
-                // 根据 camera 高度计算，仅适用于 camera 方向垂直向下的情况
-                let cameraHeight = this.cesium.viewer.camera.positionCartographic.height
-                let scale = cameraHeight * factor;
-                o.scale.set(scale, scale, scale);
-
-            }
-
+        // 首次渲染，resize
+        if (!this.__cache__resized) {
+            this.resizeToFixedSize()
+            this.__cache__resized = true
         }
 
         // 地球背面不显示
@@ -215,6 +192,39 @@ class BaseObject {
             if (object_at_front && this.__cache__进入背面时临时隐藏CssTip) {
                 this.restoreCssTip()
                 this.__cache__进入背面时临时隐藏CssTip = false
+            }
+
+        }
+
+    }
+
+    resizeToFixedSize() {
+
+        if (this.__data.fixedSize) {
+
+            let o = this.mesh
+
+            let factor = this.__data.size
+
+            let mode = this.cesium.viewer.scene.mode
+
+            if (mode === Cesium.SceneMode.SCENE3D) {
+
+                // 根据 object 到 camera 平面的距离计算，可用，准确
+                let camera = this.cesium.viewer.camera
+                let cameraPlane = Cesium.Plane.fromPointNormal(camera.position, camera.directionWC)
+                let pos = new Cesium.Cartesian3(o.position.x, o.position.y, o.position.z)
+                let distance = Cesium.Plane.getPointDistance(cameraPlane, pos)
+                let scale = distance * factor;
+                o.scale.set(scale, scale, scale);
+
+            } else if (mode === Cesium.SceneMode.COLUMBUS_VIEW) {
+
+                // 根据 camera 高度计算，仅适用于 camera 方向垂直向下的情况
+                let cameraHeight = this.cesium.viewer.camera.positionCartographic.height
+                let scale = cameraHeight * factor;
+                o.scale.set(scale, scale, scale);
+
             }
 
         }
