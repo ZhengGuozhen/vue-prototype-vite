@@ -333,6 +333,7 @@ class World {
             
                 // 更新连接线位置
                 // todo 不完善，需要使用单独的entity做tip
+                // 或者使用一个billboard做连接线
                 let tipPos = null
                 let tipPos_ = null
                 let tipPosR_ = __cache__pickedEntity.label.pixelOffset._value
