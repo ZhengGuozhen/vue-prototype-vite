@@ -181,6 +181,9 @@ class World {
             that.onPostRender()
         })
 
+        // 
+        this.initCesiumTipDrag()
+
     }
 
     addScreenSpaceEventHandler(cb, eventType) {
@@ -296,6 +299,64 @@ class World {
 
         console.warn('resizeObjects2')
 
+    }
+
+    initCesiumTipDrag() {
+
+        let __cache__pickedEntity = null
+
+        this.addScreenSpaceEventHandler((e) => {
+
+            let pickedPrimitive = this.cesium.viewer.scene.pick(e.position);
+            let pickedEntity = (Cesium.defined(pickedPrimitive)) ? pickedPrimitive.id : undefined;
+            if (Cesium.defined(pickedEntity) && Cesium.defined(pickedEntity.label)) {
+
+                // pickedEntity.label.pixelOffset = new Cesium.Cartesian2(110, 50)
+
+                __cache__pickedEntity = pickedEntity
+
+                this.cesium.viewer.scene.screenSpaceCameraController.enableTranslate = false
+                this.cesium.viewer.scene.screenSpaceCameraController.enableRotate = false;
+
+            }
+
+        }, this.ScreenSpaceEventType.LEFT_DOWN)
+
+        this.addScreenSpaceEventHandler((e) => {
+
+            if (__cache__pickedEntity) {
+
+                // 更新 tip 位置
+                let p0 = e.endPosition
+                let p1 = this.cesium.viewer.scene.cartesianToCanvasCoordinates(__cache__pickedEntity.position._value)
+                __cache__pickedEntity.label.pixelOffset = new Cesium.Cartesian2(p0.x - p1.x, p0.y - p1.y)
+            
+                // 更新连接线位置
+                // todo 不完善，需要使用单独的entity做tip
+                let tipPos = null
+                let tipPos_ = null
+                let tipPosR_ = __cache__pickedEntity.label.pixelOffset._value
+                let entityPos = __cache__pickedEntity.position._value
+                let entityPos_ = this.cesium.viewer.scene.cartesianToCanvasCoordinates(entityPos)
+                tipPos_ = new Cesium.Cartesian2(entityPos_.x + tipPosR_.x, entityPos_.y + tipPosR_.y)
+                tipPos = this.cesium.viewer.scene.globe.pick(this.cesium.viewer.camera.getPickRay(tipPos_), this.cesium.viewer.scene);
+                __cache__pickedEntity.polyline.positions = [
+                    entityPos,
+                    tipPos
+                ]
+            
+            }
+
+        }, this.ScreenSpaceEventType.MOUSE_MOVE)
+
+        this.addScreenSpaceEventHandler((e) => {
+
+            __cache__pickedEntity = null
+
+            this.cesium.viewer.scene.screenSpaceCameraController.enableTranslate = true
+            this.cesium.viewer.scene.screenSpaceCameraController.enableRotate = true;
+
+        }, this.ScreenSpaceEventType.LEFT_UP)
     }
     // ======================================
 

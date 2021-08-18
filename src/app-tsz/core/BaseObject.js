@@ -372,10 +372,13 @@ top: -60px;
     // ===================================
     init2(d) {
 
+        let tipPosRel = new Cesium.Cartesian2(0, 50)
+        let entityPos = Cesium.Cartesian3.fromDegrees(...d.position)
+
         const entityOptions = {
             id: uuid(),
             name: d.id,
-            position: Cesium.Cartesian3.fromDegrees(...d.position),
+            position: entityPos,
             ellipse: {
                 semiMinorAxis: 100000,
                 semiMajorAxis: 100000,
@@ -402,10 +405,24 @@ top: -60px;
             //     height: 64,
             //     rotation: 0
             // },
+
+            // tip
             label: {
                 text: d.id,
-                pixelOffset: new Cesium.Cartesian2(0, 50)
+                pixelOffset: tipPosRel,
+                showBackground: true,
+                backgroundColor: Cesium.Color.BLACK.withAlpha(0.1)
+            },
+            // 连接线
+            polyline: {
+                positions: [
+                    // entityPos,
+                    // tipPos
+                ],
+                width: 1,
+                material: Cesium.Color.RED
             }
+            
         };
 
         this.entity = new Cesium.Entity(entityOptions)
@@ -445,7 +462,7 @@ top: -60px;
                 // 根据 camera 高度计算，仅适用于 camera 方向垂直向下的情况
                 let cameraHeight = this.cesium.viewer.camera.positionCartographic.height
                 let scale = cameraHeight * factor;
-                
+
                 o.semiMinorAxis = scale
                 o.semiMajorAxis = scale
 
