@@ -40,19 +40,9 @@ class BaseObject {
 
     constructor(d = new BaseObjectData) {
 
-        const that = this
 
         // 
         this.hub = null
-
-        // 
-        this.mesh = new THREE.Mesh()
-        this.mesh.frustumCulled = false
-        this.mesh.onBeforeRender = () => {
-            that.onMeshBeforeRender()
-        }
-        this.mesh.__rootParent = this
-        this.mesh.__tag = 'rootMesh'
 
         // 
         this.resource = Resource.getInstance()
@@ -62,63 +52,35 @@ class BaseObject {
         this.currentViewerSceneMode = null
 
         // 
-        this.tip = {}
-
-        // 
-        this.icon = null
-
-        // 
         this.__data = d
 
-        this.init(d)
+        // three
+        this.mesh = null
+        this.tip = {}
+        this.icon = null
+        // this.init(d)
 
-
-        // test ================================
-        // cesium entity 不适合进行动态操作
-        const entity = {
-            name: 'entity-0',
-            position: Cesium.Cartesian3.fromDegrees(...d.position),
-            ellipse: {
-                semiMinorAxis: 5000,
-                semiMajorAxis: 8000,
-                fill: false,
-                outline: true,
-                outlineColor: Cesium.Color.YELLOW,
-                outlineWidth: 2.0,
-                // material: Cesium.Color.BLUE.withAlpha(0.5)
-                material: '/image/flag_cn.png',
-                rotation: -Math.PI / 4
-            },
-            // polygon: {
-            //     hierarchy: Cesium.Cartesian3.fromDegreesArray([
-            //         d.position[0] - 1, d.position[1] - 1,
-            //         d.position[0] + 1, d.position[1] - 1,
-            //         d.position[0] + 1, d.position[1] + 1,
-            //         d.position[0] - 1, d.position[1] + 1,
-            //     ]),
-            //     material: Cesium.Color.RED.withAlpha(0.2)
-            // },
-            // billboard: {
-            //     image: '/image/flag_cn.png',
-            //     width: 64,
-            //     height: 64,
-            //     rotation: -Math.PI/4
-            // }
-        };
-        this.entity = this.cesium.viewer.entities.add(entity);
-
-        // 精灵对象不正常，与 three camera 有关
-        // const sprite = new THREE.Sprite(this.resource.getMaterialTexture(d.icon.url));
-        // sprite.scale.set(5, 5, 5)
-        // this.mesh.add(sprite);
-
-        // test ================================
+        // cesium
+        this.entity = null
+        this.init2(d)
 
     }
 
+    // ===================================
     init(d) {
 
-        let o = this.mesh;
+        const that = this
+
+        // 
+        this.mesh = new THREE.Mesh()
+        this.mesh.frustumCulled = false
+        this.mesh.onBeforeRender = () => {
+            that.onMeshBeforeRender()
+        }
+
+        // 
+        this.mesh.__rootParent = this
+        this.mesh.__tag = 'rootMesh'
 
         // 平面
         if (d.icon.show) {
@@ -127,7 +89,7 @@ class BaseObject {
 
             let iconObject = new THREE.Mesh(geometry, material);
             iconObject.scale.set(1, 1, 1);
-            o.add(iconObject)
+            this.mesh.add(iconObject)
 
             this.icon = iconObject
             this.icon.__rootParent = this
@@ -136,9 +98,9 @@ class BaseObject {
         }
 
         // 坐标轴
-        // o.add(new THREE.AxesHelper(2))
+        // this.mesh.add(new THREE.AxesHelper(2))
         // 网格
-        // o.add(new THREE.GridHelper(2, 10))
+        // this.mesh.add(new THREE.GridHelper(2, 10))
 
         // tip
         if (d.cssTip.show) {
@@ -353,7 +315,6 @@ top: -60px;
 
     }
 
-
     rotateIcon(course, r = false) {
         this.icon.rotation.set(0, - course * Math.PI / 180, 0)
 
@@ -406,6 +367,94 @@ top: -60px;
             if (r) { this.world.timerRender() }
         }
     }
+    // ===================================
+
+    // ===================================
+    init2(d) {
+
+        const entityOptions = {
+            id: uuid(),
+            name: d.id,
+            position: Cesium.Cartesian3.fromDegrees(...d.position),
+            ellipse: {
+                semiMinorAxis: 100000,
+                semiMajorAxis: 100000,
+                fill: true,
+                // material: Cesium.Color.BLUE.withAlpha(0.5)
+                material: '/image/flag_cn.png',
+                outline: true,
+                outlineColor: Cesium.Color.YELLOW,
+                outlineWidth: 2.0,
+                rotation: -Math.PI / 4
+            },
+            // polygon: {
+            //     hierarchy: Cesium.Cartesian3.fromDegreesArray([
+            //         d.position[0] - 1, d.position[1] - 1,
+            //         d.position[0] + 1, d.position[1] - 1,
+            //         d.position[0] + 1, d.position[1] + 1,
+            //         d.position[0] - 1, d.position[1] + 1,
+            //     ]),
+            //     material: Cesium.Color.RED.withAlpha(0.2)
+            // },
+            // billboard: {
+            //     image: '/image/flag_cn.png',
+            //     width: 64,
+            //     height: 64,
+            //     rotation: 0
+            // },
+            label: {
+                text: d.id,
+                pixelOffset: new Cesium.Cartesian2(0, 50)
+            }
+        };
+
+        this.entity = new Cesium.Entity(entityOptions)
+        this.cesium.viewer.entities.add(this.entity);
+
+        // 
+        this.entity.__rootParent = this
+        this.entity.__tag = 'rootEntity'
+
+    }
+
+    resizeToFixedSize2() {
+
+        if (this.__data.fixedSize) {
+
+            // 
+            let o = this.entity.ellipse
+
+            let factor = this.__data.size
+
+            let mode = this.cesium.viewer.scene.mode
+
+            if (mode === Cesium.SceneMode.SCENE3D) {
+
+                // 根据 object 到 camera 平面的距离计算，可用，准确
+                let camera = this.cesium.viewer.camera
+                let cameraPlane = Cesium.Plane.fromPointNormal(camera.position, camera.directionWC)
+                let pos = this.entity.position._value
+                let distance = Cesium.Plane.getPointDistance(cameraPlane, pos)
+                let scale = distance * factor;
+
+                o.semiMinorAxis = scale
+                o.semiMajorAxis = scale
+
+            } else if (mode === Cesium.SceneMode.COLUMBUS_VIEW) {
+
+                // 根据 camera 高度计算，仅适用于 camera 方向垂直向下的情况
+                let cameraHeight = this.cesium.viewer.camera.positionCartographic.height
+                let scale = cameraHeight * factor;
+                
+                o.semiMinorAxis = scale
+                o.semiMajorAxis = scale
+
+            }
+
+        }
+
+    }
+    // ===================================
 
 }
 
@@ -441,7 +490,9 @@ class BaseObjectHub {
         this.indexObjectID.set(o.__data.id, o)
 
         // 默认显示
-        this.rootGroup.add(o.mesh)
+        if (o.mesh) {
+            this.rootGroup.add(o.mesh)
+        }
 
     }
 

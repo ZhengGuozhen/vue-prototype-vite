@@ -7,12 +7,12 @@ class TrackObject extends BaseObject {
 
         super(d)
 
-        let a = new THREE.Mesh(
-            this.resource.getGeometry('cone'),
-            this.resource.getMaterial('meshNormalMaterial')
-        );
-        a.scale.set(1, 1, 1);
-        this.mesh.add(a)
+        // let a = new THREE.Mesh(
+        //     this.resource.getGeometry('cone'),
+        //     this.resource.getMaterial('meshNormalMaterial')
+        // );
+        // a.scale.set(1, 1, 1);
+        // this.mesh.add(a)
 
     }
 

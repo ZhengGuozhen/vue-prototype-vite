@@ -172,6 +172,15 @@ class World {
         // this.addScreenSpaceEventHandler((e) => {
         // }, this.ScreenSpaceEventType.WHEEL)
 
+        // scene 事件
+        const scene = this.cesium.viewer.scene
+        scene.preRender.addEventListener(() => {
+            that.onPreRender()
+        })
+        scene.postRender.addEventListener(() => {
+            that.onPostRender()
+        })
+
     }
 
     addScreenSpaceEventHandler(cb, eventType) {
@@ -263,6 +272,31 @@ class World {
         // if (this.isCameraZooming) { console.warn('CameraZooming') }
 
     }
+
+    onPreRender() {
+
+        if (this.isCameraZooming) {
+            this.resizeObjects2()
+        }
+
+    }
+    onPostRender() {
+
+    }
+
+    resizeObjects2() {
+
+        let all = this.cesium.viewer.entities.values
+
+        all.forEach((o) => {
+            if (o.__rootParent && o.__rootParent.entity) {
+                o.__rootParent.resizeToFixedSize2()
+            }
+        })
+
+        console.warn('resizeObjects2')
+
+    }
     // ======================================
 
     // ======================================
@@ -350,7 +384,7 @@ class World {
             if (this.three.globalClippingPlanes.length === 0) {
 
                 this.three.globalClippingPlanes[0] = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0)
-            
+
             }
 
             let v = this.cesium.viewer.camera.position
@@ -358,7 +392,7 @@ class World {
             let l = r * r / this.__cache__cameraDistanceToCenter
 
             this.three.globalClippingPlanes[0].set((new THREE.Vector3(v.x, v.y, v.z)).normalize(), -l)
-        
+
         } else {
 
             if (this.three.globalClippingPlanes.length > 0) {
@@ -366,7 +400,7 @@ class World {
                 this.three.globalClippingPlanes.length = 0
 
             }
-            
+
         }
 
         this.three.renderer.render(this.three.scene, this.three.camera);
