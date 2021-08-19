@@ -1,9 +1,19 @@
 import * as THREE from 'three/build/three.module.js'
-import { BaseObject, BaseObjectData } from '../core/BaseObject.js'
+import { BaseObjectData, BaseObject, BaseObjectHub } from '../core/BaseObject.js'
+
+class TrackObjectData extends BaseObjectData {
+
+    constructor(d = new BaseObjectData) {
+
+        super(d)
+
+    }
+
+}
 
 class TrackObject extends BaseObject {
 
-    constructor(d = new BaseObjectData) {
+    constructor(d = new TrackObjectData) {
 
         super(d)
 
@@ -18,4 +28,14 @@ class TrackObject extends BaseObject {
 
 }
 
-export { TrackObject }
+class TrackObjectHub extends BaseObjectHub {
+
+    constructor(name = 'TrackObjectHub') {
+
+        super(name)
+
+    }
+
+}
+
+export { TrackObjectData, TrackObject, TrackObjectHub }

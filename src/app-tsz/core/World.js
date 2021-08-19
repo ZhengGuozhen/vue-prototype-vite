@@ -54,7 +54,7 @@ class World {
         this.renderEnable = false
         this.renderTimeoutID = null
 
-        this.defaultPosition = [114.43, 30.41, 1000000]
+        this.defaultPosition = [114.43, 30.41, 10000000]
 
         // event
         this.event_view_changed = new CustomEvent('event_view_changed', {
@@ -99,8 +99,8 @@ class World {
     initCesium() {
 
         let extent = Cesium.Rectangle.fromDegrees(
-            this.defaultPosition[0] - 1, this.defaultPosition[1] - 1,
-            this.defaultPosition[0] + 1, this.defaultPosition[1] + 1);
+            this.defaultPosition[0] - 20, this.defaultPosition[1] - 20,
+            this.defaultPosition[0] + 20, this.defaultPosition[1] + 20);
         Cesium.Camera.DEFAULT_VIEW_RECTANGLE = extent;
         Cesium.Camera.DEFAULT_VIEW_FACTOR = 0;
 
@@ -305,13 +305,12 @@ class World {
 
         let __cache__pickedEntity = null
 
+        // mousedown
         this.addScreenSpaceEventHandler((e) => {
 
             let pickedPrimitive = this.cesium.viewer.scene.pick(e.position);
             let pickedEntity = (Cesium.defined(pickedPrimitive)) ? pickedPrimitive.id : undefined;
             if (Cesium.defined(pickedEntity) && Cesium.defined(pickedEntity.label)) {
-
-                // pickedEntity.label.pixelOffset = new Cesium.Cartesian2(110, 50)
 
                 __cache__pickedEntity = pickedEntity
 
@@ -322,34 +321,33 @@ class World {
 
         }, this.ScreenSpaceEventType.LEFT_DOWN)
 
+        // mousemove
         this.addScreenSpaceEventHandler((e) => {
 
             if (__cache__pickedEntity) {
 
-                // 更新 tip 位置
                 let p0 = e.endPosition
                 let p1 = this.cesium.viewer.scene.cartesianToCanvasCoordinates(__cache__pickedEntity.position._value)
-                __cache__pickedEntity.label.pixelOffset = new Cesium.Cartesian2(p0.x - p1.x, p0.y - p1.y)
-            
-                // 更新连接线位置
-                // todo 不完善，需要使用单独的entity做tip
-                // 或者使用一个billboard做连接线
-                let tipPos = null
-                let tipPos_ = null
-                let tipPosR_ = __cache__pickedEntity.label.pixelOffset._value
-                let entityPos = __cache__pickedEntity.position._value
-                let entityPos_ = this.cesium.viewer.scene.cartesianToCanvasCoordinates(entityPos)
-                tipPos_ = new Cesium.Cartesian2(entityPos_.x + tipPosR_.x, entityPos_.y + tipPosR_.y)
-                tipPos = this.cesium.viewer.scene.globe.pick(this.cesium.viewer.camera.getPickRay(tipPos_), this.cesium.viewer.scene);
-                __cache__pickedEntity.polyline.positions = [
-                    entityPos,
-                    tipPos
-                ]
-            
+
+                let pLabel = new Cesium.Cartesian2(p0.x - p1.x, p0.y - p1.y)
+                let pBillboard = new Cesium.Cartesian2((p0.x - p1.x) / 2, (p0.y - p1.y) / 2)
+                let connLength = Cesium.Cartesian2.distance(pLabel, Cesium.Cartesian2.ZERO)
+                let connAngle = Cesium.Cartesian2.angleBetween(pLabel, new Cesium.Cartesian2(0, -1))
+                if (pLabel.x > 0) { connAngle = - connAngle }
+
+                // 更新 tip 位置
+                __cache__pickedEntity.label.pixelOffset = pLabel
+
+                // 更新连接线
+                __cache__pickedEntity.billboard.pixelOffset = pBillboard
+                __cache__pickedEntity.billboard.height = connLength
+                __cache__pickedEntity.billboard.rotation = connAngle
+
             }
 
         }, this.ScreenSpaceEventType.MOUSE_MOVE)
 
+        // mouseup
         this.addScreenSpaceEventHandler((e) => {
 
             __cache__pickedEntity = null
@@ -358,6 +356,7 @@ class World {
             this.cesium.viewer.scene.screenSpaceCameraController.enableRotate = true;
 
         }, this.ScreenSpaceEventType.LEFT_UP)
+        
     }
     // ======================================
 

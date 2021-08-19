@@ -372,13 +372,10 @@ top: -60px;
     // ===================================
     init2(d) {
 
-        let tipPosRel = new Cesium.Cartesian2(0, 50)
-        let entityPos = Cesium.Cartesian3.fromDegrees(...d.position)
-
         const entityOptions = {
             id: uuid(),
             name: d.id,
-            position: entityPos,
+            position: Cesium.Cartesian3.fromDegrees(...d.position),
             ellipse: {
                 semiMinorAxis: 100000,
                 semiMajorAxis: 100000,
@@ -390,39 +387,21 @@ top: -60px;
                 outlineWidth: 2.0,
                 rotation: -Math.PI / 4
             },
-            // polygon: {
-            //     hierarchy: Cesium.Cartesian3.fromDegreesArray([
-            //         d.position[0] - 1, d.position[1] - 1,
-            //         d.position[0] + 1, d.position[1] - 1,
-            //         d.position[0] + 1, d.position[1] + 1,
-            //         d.position[0] - 1, d.position[1] + 1,
-            //     ]),
-            //     material: Cesium.Color.RED.withAlpha(0.2)
-            // },
-            // billboard: {
-            //     image: '/image/flag_cn.png',
-            //     width: 64,
-            //     height: 64,
-            //     rotation: 0
-            // },
-
             // tip
             label: {
                 text: d.id,
-                pixelOffset: tipPosRel,
+                pixelOffset: new Cesium.Cartesian2(0, 50),
                 showBackground: true,
                 backgroundColor: Cesium.Color.BLACK.withAlpha(0.1)
             },
-            // 连接线
-            polyline: {
-                positions: [
-                    // entityPos,
-                    // tipPos
-                ],
-                width: 1,
-                material: Cesium.Color.RED
-            }
-            
+            billboard: {
+                image: '/image/flag_cn.png',
+                color: Cesium.Color.RED,
+                width: 2,
+                height: 50,
+                pixelOffset: new Cesium.Cartesian2(0, 25),
+                rotation: 0
+            },
         };
 
         this.entity = new Cesium.Entity(entityOptions)
@@ -565,6 +544,19 @@ class BaseObjectHub {
 
     }
 
+    createObject(n) {
+        console.time('批量创建object')
+
+        for (let i = 0; i < n; i++) {
+            let o = new BaseObject(new BaseObjectData({
+                id: 'BaseObject-' + i,
+                position: [114 + i / 10, 30, 0]
+            }))
+            this.addObject(o)
+        }
+
+        console.timeEnd('批量创建object')
+    }
 }
 
 export { BaseObject, BaseObjectData, BaseObjectHub }

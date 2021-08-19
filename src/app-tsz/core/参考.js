@@ -199,3 +199,32 @@ this.cesium.viewer.scene.screenSpaceCameraController.enableZoom = false;
 // 如果为真，则允许用户倾斜相机。如果为假，相机将锁定到当前标题。这个标志只适用于3D和哥伦布视图。
 this.cesium.viewer.scene.screenSpaceCameraController.enableTilt = false;
 // ======================================
+
+
+
+// 一种连接线方案
+// ======================================
+// 连接线
+polyline: {
+    positions: [
+        // entityPos,
+        // tipPos
+    ],
+    width: 1,
+    material: Cesium.Color.RED
+}
+// 更新连接线位置
+// todo 不完善，需要使用单独的entity做tip
+// 或者使用一个billboard做连接线
+let tipPos = null
+let tipPos_ = null
+let tipPosR_ = __cache__pickedEntity.label.pixelOffset._value
+let entityPos = __cache__pickedEntity.position._value
+let entityPos_ = this.cesium.viewer.scene.cartesianToCanvasCoordinates(entityPos)
+tipPos_ = new Cesium.Cartesian2(entityPos_.x + tipPosR_.x, entityPos_.y + tipPosR_.y)
+tipPos = this.cesium.viewer.scene.globe.pick(this.cesium.viewer.camera.getPickRay(tipPos_), this.cesium.viewer.scene);
+__cache__pickedEntity.polyline.positions = [
+    entityPos,
+    tipPos
+]
+// ======================================
