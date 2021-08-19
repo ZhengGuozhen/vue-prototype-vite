@@ -401,6 +401,9 @@ top: -60px;
 
     addRootEntity(d) {
 
+        // todo
+        // 使用 Primitive 绘制 fixed 对象
+
         const options = {
             id: uuid(),
             name: d.id,
