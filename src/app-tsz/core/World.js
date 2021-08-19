@@ -184,6 +184,12 @@ class World {
         // 
         this.initCesiumTipDrag()
 
+        // 
+        this.cesium.viewer.scene.screenSpaceCameraController.enableTilt = false;
+
+        // 
+        this.cesium.viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+
     }
 
     addScreenSpaceEventHandler(cb, eventType) {
@@ -310,7 +316,11 @@ class World {
 
             let pickedPrimitive = this.cesium.viewer.scene.pick(e.position);
             let pickedEntity = (Cesium.defined(pickedPrimitive)) ? pickedPrimitive.id : undefined;
-            if (Cesium.defined(pickedEntity) && Cesium.defined(pickedEntity.label)) {
+            
+            if (Cesium.defined(pickedEntity) &&
+                Cesium.defined(pickedEntity.label) &&
+                pickedEntity.__tag === 'EntityTip'
+            ) {
 
                 __cache__pickedEntity = pickedEntity
 
@@ -356,7 +366,7 @@ class World {
             this.cesium.viewer.scene.screenSpaceCameraController.enableRotate = true;
 
         }, this.ScreenSpaceEventType.LEFT_UP)
-        
+
     }
     // ======================================
 
@@ -591,7 +601,7 @@ class World {
         this.three.scene.traverseVisible(o => {
 
             if (
-                o.__tag === 'rootMesh' &&
+                o.__tag === 'RootMesh' &&
                 o.__rootParent
             ) {
                 o.__rootParent.resizeToFixedSize()

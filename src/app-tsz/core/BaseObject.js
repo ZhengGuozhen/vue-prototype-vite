@@ -27,9 +27,6 @@ class BaseObjectData {
             rotation: 45
         }
 
-        this.CACHE = {
-        }
-
         Object.assign(this, d)
 
     }
@@ -58,14 +55,16 @@ class BaseObject {
         this.mesh = null
         this.tip = {}
         this.icon = null
-        // this.init(d)
+        this.init(d)
 
         // cesium
         this.entity = null
+        this.entityTip = null
         this.init2(d)
 
     }
 
+    // three
     // ===================================
     init(d) {
 
@@ -80,7 +79,7 @@ class BaseObject {
 
         // 
         this.mesh.__rootParent = this
-        this.mesh.__tag = 'rootMesh'
+        this.mesh.__tag = 'RootMesh'
 
         // 平面
         if (d.icon.show) {
@@ -252,7 +251,6 @@ top: -60px;
 <div class="flex flex-row items-start cursor-pointer text-white">
     <div class="pointer-events-auto border-2 border-red-400 bg-gray-500 whitespace-nowrap">${this.__data.cssTip.defaultValue}</div>
     <div class="pointer-events-auto border-2 border-red-400 bg-gray-500 w-24">slot1 slot1 slot1 slot1</div>
-    <div class="pointer-events-auto border-2 border-red-400 bg-gray-500 w-24">slot2 slot2 slot2 slot2 slot2</div>
 <div>
 `
 
@@ -315,12 +313,6 @@ top: -60px;
 
     }
 
-    rotateIcon(course, r = false) {
-        this.icon.rotation.set(0, - course * Math.PI / 180, 0)
-
-        if (r) { this.world.timerRender() }
-    }
-
     removeCssTip(r = false) {
         if (this.tip.tipObject) {
             this.mesh.remove(this.tip.tipObject)
@@ -367,15 +359,53 @@ top: -60px;
             if (r) { this.world.timerRender() }
         }
     }
+
+    rotateIcon(course, r = false) {
+
+        if (!this.icon) { return }
+
+        this.icon.rotation.set(0, - course * Math.PI / 180, 0)
+
+        if (r) { this.world.timerRender() }
+
+    }
+    update(d, r = false) {
+
+        let { longitude, latitude, altitude, course } = d
+
+        // 更新位置
+        if (longitude && latitude) {
+            this.__data.position = [longitude, latitude, altitude || 0]
+            this.dq()
+        }
+
+        // 更新旋转s
+        if (course) {
+            this.rotateIcon(course)
+        }
+
+        if (r) { this.world.timerRender() }
+
+    }
     // ===================================
 
+    // cesium
     // ===================================
     init2(d) {
 
-        const entityOptions = {
+        this.addRootEntity(d)
+
+        this.addEntityTip(d)
+
+    }
+
+    addRootEntity(d) {
+
+        const options = {
             id: uuid(),
             name: d.id,
             position: Cesium.Cartesian3.fromDegrees(...d.position),
+
             ellipse: {
                 semiMinorAxis: 100000,
                 semiMajorAxis: 100000,
@@ -387,29 +417,54 @@ top: -60px;
                 outlineWidth: 2.0,
                 rotation: -Math.PI / 4
             },
-            // tip
-            label: {
-                text: d.id,
-                pixelOffset: new Cesium.Cartesian2(0, 50),
-                showBackground: true,
-                backgroundColor: Cesium.Color.BLACK.withAlpha(0.1)
-            },
-            billboard: {
-                image: '/image/flag_cn.png',
-                color: Cesium.Color.RED,
-                width: 2,
-                height: 50,
-                pixelOffset: new Cesium.Cartesian2(0, 25),
-                rotation: 0
-            },
         };
 
-        this.entity = new Cesium.Entity(entityOptions)
+        this.entity = new Cesium.Entity(options)
         this.cesium.viewer.entities.add(this.entity);
 
         // 
         this.entity.__rootParent = this
-        this.entity.__tag = 'rootEntity'
+        this.entity.__tag = 'RootEntity'
+    }
+
+    addEntityTip(d) {
+
+        const options = {
+            id: uuid(),
+            name: d.id,
+            position: Cesium.Cartesian3.fromDegrees(...d.position),
+
+            label: {
+                text: d.id,
+                pixelOffset: new Cesium.Cartesian2(0, 50),
+                scale: 0.8,
+
+                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                fillColor: Cesium.Color.WHITE,
+                outlineColor: Cesium.Color.BLACK,
+                outlineWidth: 2,
+                showBackground: true,
+                backgroundColor: Cesium.Color.BLACK.withAlpha(0.1),
+                backgroundPadding: new Cesium.Cartesian2(8, 4),
+                disableDepthTestDistance: Number.POSITIVE_INFINITY,
+            },
+            billboard: {
+                pixelOffset: new Cesium.Cartesian2(0, 25),
+                rotation: 0,
+
+                image: '/image/flag_cn.png',
+                color: Cesium.Color.RED,
+                width: 1,
+                height: 50,
+            },
+        };
+
+        this.entityTip = new Cesium.Entity(options)
+        this.cesium.viewer.entities.add(this.entityTip);
+
+        // 
+        this.entityTip.__rootParent = this
+        this.entityTip.__tag = 'EntityTip'
 
     }
 
@@ -461,6 +516,8 @@ class BaseObjectHub {
         this.name = name
 
         this.world = World.getInstance()
+        this.three = this.world.three
+        this.cesium = this.world.cesium
 
         this.rootGroup = new THREE.Group()
         this.world.three.scene.add(this.rootGroup)
@@ -469,11 +526,13 @@ class BaseObjectHub {
 
     }
 
+    // three
+    // ===================================
     setEnable(enable) {
         if (enable) {
-            World.getInstance().three.scene.add(this.rootGroup)
+            this.three.scene.add(this.rootGroup)
         } else {
-            World.getInstance().three.scene.remove(this.rootGroup)
+            this.three.scene.remove(this.rootGroup)
         }
 
         this.world.timerRender()
@@ -530,9 +589,9 @@ class BaseObjectHub {
 
     pick(x, y) {
 
-        const intersects = this.world.pick(x, y, this.rootGroup.children);
-
         let objects = []
+
+        const intersects = this.world.pick(x, y, this.rootGroup.children);
 
         intersects.forEach(i => {
             if (i.object.__rootParent) {
@@ -543,6 +602,26 @@ class BaseObjectHub {
         return objects
 
     }
+    // ===================================
+
+    // cesium
+    // ===================================
+    pick2(x, y) {
+
+        let objects = []
+
+        let pickedPrimitive = this.cesium.viewer.scene.pick(new Cesium.Cartesian2(x, y));
+        let pickedEntity = (Cesium.defined(pickedPrimitive)) ? pickedPrimitive.id : undefined;
+
+        if (Cesium.defined(pickedEntity) && pickedEntity.__rootParent) {
+            objects.push(pickedEntity.__rootParent)
+        }
+
+        return objects
+
+    }
+    // ===================================
+
 
     createObject(n) {
         console.time('批量创建object')
