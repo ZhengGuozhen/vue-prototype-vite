@@ -49,6 +49,15 @@ const contextMenuOptions_World = [
             o.baseObjectHub.restoreAll()
         },
     },
+    {
+        label: '播放test',
+        action: (o) => {
+            setInterval(() => {
+                o.baseObjectHub.updateObjects()
+                o.world.timerRender(100)
+            }, 500)
+        },
+    },
 ]
 const contextMenuOptions_BaseObject = [
     {
@@ -70,8 +79,17 @@ const contextMenuOptions_BaseObject = [
         action: (o) => {
             o.update(
                 {
-                    longitude: 110,
-                    latitude: 20,
+                    longitude: 114,
+                    latitude: 29,
+                    altitude: 0,
+                    course: 30,
+                },
+                true,
+            )
+            o.update2(
+                {
+                    longitude: 114,
+                    latitude: 29,
                     altitude: 0,
                     course: 30,
                 },

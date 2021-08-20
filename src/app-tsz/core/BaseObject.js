@@ -16,15 +16,22 @@ class BaseObjectData {
         this.fixedSize = true
         this.size = 0.05
 
+        this.icon = {
+            show: true,
+            url: '/image/ship.png',
+            rotation: 0
+        }
+
+        // three
         this.cssTip = {
             show: true,
             defaultValue: this.id
         }
 
-        this.icon = {
+        // cesium
+        this.entityTip = {
             show: true,
-            url: '/image/flag_cn.png',
-            rotation: 45
+            defaultValue: this.id
         }
 
         Object.assign(this, d)
@@ -36,7 +43,6 @@ class BaseObjectData {
 class BaseObject {
 
     constructor(d = new BaseObjectData) {
-
 
         // 
         this.hub = null
@@ -68,6 +74,12 @@ class BaseObject {
     // ===================================
     init(d) {
 
+        this.addMeshMain(d)
+
+    }
+
+    addMeshMain(d) {
+
         const that = this
 
         // 
@@ -93,13 +105,9 @@ class BaseObject {
             this.icon = iconObject
             this.icon.__rootParent = this
 
+            // 默认旋转
             this.rotateIcon(d.icon.rotation)
         }
-
-        // 坐标轴
-        // this.mesh.add(new THREE.AxesHelper(2))
-        // 网格
-        // this.mesh.add(new THREE.GridHelper(2, 10))
 
         // tip
         if (d.cssTip.show) {
@@ -107,6 +115,96 @@ class BaseObject {
             this.addCssTip()
 
         }
+
+        // 坐标轴
+        // this.mesh.add(new THREE.AxesHelper(2))
+        // 网格
+        // this.mesh.add(new THREE.GridHelper(2, 10))
+
+    }
+    addCssTip() {
+
+        // 
+        const tipWrapper = document.createElement('div')
+        tipWrapper.style = `
+pointer-events: none;
+height: 0;
+width: 0;
+user-select: none;
+`
+        tipWrapper.textContent = ''
+
+        // 
+        const tipBody = document.createElement('div')
+        tipBody.style = `
+pointer-events: none;
+position: absolute;
+left: -50px;
+top: -60px;
+`
+        tipBody.innerHTML = `
+<div class="flex flex-row items-start cursor-pointer text-white">
+    <div class="pointer-events-auto border-2 border-red-400 bg-gray-500 whitespace-nowrap">${this.__data.cssTip.defaultValue}</div>
+    <div class="pointer-events-auto border-2 border-red-400 bg-gray-500 w-24">slot1 slot1 slot1 slot1</div>
+<div>
+`
+
+        tipWrapper.appendChild(tipBody)
+
+        // 
+        const tipObject = new CSS2DObject(tipWrapper)
+        tipObject.position.set(0, 0, 0)
+        this.mesh.add(tipObject)
+
+        // 
+        tipBody.addEventListener('contextmenu', (e) => {
+            console.error(e)
+            e.preventDefault()
+        })
+
+        // 
+        this.tip.tipWrapper = tipWrapper
+        this.tip.tipBody = tipBody
+        this.tip.tipObject = tipObject
+
+        // 
+        this.tip.tipObject.onAfterRender = () => {
+
+            if (!this.tip.tipBody.conn) {
+
+                this.addCssTipConn()
+
+                this.tip.tipObject.onAfterRender = () => { }
+
+            }
+
+        }
+
+    }
+    addCssTipConn() {
+
+        // 需要 render 一下，或者 document.body.appendChild(tipWrapper) 后面才能 plumbIns.connect
+        // document.body.appendChild(this.tip.tipWrapper)
+        // this.world.renderThree()
+
+        let source = this.tip.tipBody
+        let target = this.tip.tipWrapper
+
+        const plumbIns = jsPlumb.getInstance()
+        plumbIns.draggable(source)
+        let conn = plumbIns.connect({
+            source: source,
+            target: target,
+            paintStyle: { stroke: 'red', strokeWidth: 1, dashstyle: '3' },
+            endpoint: "Blank",
+            // anchor: ["Center"],
+            // anchor: "AutoDefault",
+            // anchor: ["Perimeter", { shape: "Circle" }],
+            anchor: ["Perimeter", { shape: "Square" }],
+            connector: ["Straight"],
+        });
+
+        source.conn = conn
 
     }
 
@@ -227,92 +325,6 @@ class BaseObject {
 
     }
 
-    addCssTip() {
-
-        // 
-        const tipWrapper = document.createElement('div')
-        tipWrapper.style = `
-pointer-events: none;
-height: 0;
-width: 0;
-user-select: none;
-`
-        tipWrapper.textContent = ''
-
-        // 
-        const tipBody = document.createElement('div')
-        tipBody.style = `
-pointer-events: none;
-position: absolute;
-left: -50px;
-top: -60px;
-`
-        tipBody.innerHTML = `
-<div class="flex flex-row items-start cursor-pointer text-white">
-    <div class="pointer-events-auto border-2 border-red-400 bg-gray-500 whitespace-nowrap">${this.__data.cssTip.defaultValue}</div>
-    <div class="pointer-events-auto border-2 border-red-400 bg-gray-500 w-24">slot1 slot1 slot1 slot1</div>
-<div>
-`
-
-        tipWrapper.appendChild(tipBody)
-
-        // 
-        const tipObject = new CSS2DObject(tipWrapper)
-        tipObject.position.set(0, 0, 0)
-        this.mesh.add(tipObject)
-
-        // 
-        tipBody.addEventListener('contextmenu', (e) => {
-            console.error(e)
-            e.preventDefault()
-        })
-
-        // 
-        this.tip.tipWrapper = tipWrapper
-        this.tip.tipBody = tipBody
-        this.tip.tipObject = tipObject
-
-        // 
-        this.tip.tipObject.onAfterRender = () => {
-
-            if (!this.tip.tipBody.conn) {
-
-                this.addCssTipConn()
-
-                this.tip.tipObject.onAfterRender = () => { }
-
-            }
-
-        }
-
-    }
-    addCssTipConn() {
-
-        // 需要 render 一下，或者 document.body.appendChild(tipWrapper) 后面才能 plumbIns.connect
-        // document.body.appendChild(this.tip.tipWrapper)
-        // this.world.renderThree()
-
-        let source = this.tip.tipBody
-        let target = this.tip.tipWrapper
-
-        const plumbIns = jsPlumb.getInstance()
-        plumbIns.draggable(source)
-        let conn = plumbIns.connect({
-            source: source,
-            target: target,
-            paintStyle: { stroke: 'red', strokeWidth: 1, dashstyle: '3' },
-            endpoint: "Blank",
-            // anchor: ["Center"],
-            // anchor: "AutoDefault",
-            // anchor: ["Perimeter", { shape: "Circle" }],
-            anchor: ["Perimeter", { shape: "Square" }],
-            connector: ["Straight"],
-        });
-
-        source.conn = conn
-
-    }
-
     removeCssTip(r = false) {
         if (this.tip.tipObject) {
             this.mesh.remove(this.tip.tipObject)
@@ -375,13 +387,18 @@ top: -60px;
 
         // 更新位置
         if (longitude && latitude) {
+
             this.__data.position = [longitude, latitude, altitude || 0]
+
             this.dq()
+
         }
 
-        // 更新旋转s
+        // 更新旋转
         if (course) {
+
             this.rotateIcon(course)
+
         }
 
         if (r) { this.world.timerRender() }
@@ -393,41 +410,57 @@ top: -60px;
     // ===================================
     init2(d) {
 
-        this.addRootEntity(d)
-
-        this.addEntityTip(d)
+        this.addEntityMain(d)
 
     }
 
-    addRootEntity(d) {
+    addEntityMain(d) {
 
-        const options = {
-            id: uuid(),
-            name: d.id,
-            position: Cesium.Cartesian3.fromDegrees(...d.position),
+        // 平面
+        if (d.icon.show) {
 
-            ellipse: {
-                semiMinorAxis: 100000,
-                semiMajorAxis: 100000,
-                fill: true,
-                // material: Cesium.Color.BLUE.withAlpha(0.5)
-                material: '/image/flag_cn.png',
-                outline: true,
-                outlineColor: Cesium.Color.YELLOW,
-                outlineWidth: 2.0,
-                rotation: -Math.PI / 4
-            },
-        };
+            this.entity = new Cesium.Entity({
+                id: uuid(),
+                name: d.id,
+                position: Cesium.Cartesian3.fromDegrees(...d.position),
 
-        this.entity = new Cesium.Entity(options)
-        this.cesium.viewer.entities.add(this.entity);
+                ellipse: {
+                    semiMinorAxis: 100000,
+                    semiMajorAxis: 100000,
+                    fill: true,
+                    // material: Cesium.Color.BLUE.withAlpha(0.5),
+                    material: new Cesium.ImageMaterialProperty({
+                        image: d.icon.url,
+                        transparent: true,
+                    }),
+                    outline: true,
+                    outlineColor: Cesium.Color.YELLOW,
+                    outlineWidth: 2.0,
+                    stRotation: 0
+                },
+            })
+            this.cesium.viewer.entities.add(this.entity);
 
-        // 
-        this.entity.__rootParent = this
-        this.entity.__tag = 'RootEntity'
+            // 
+            this.entity.__rootParent = this
+            this.entity.__tag = 'EntityMain'
+
+            // 默认旋转
+            this.rotateIcon2(d.icon.rotation)
+
+        }
+
+        if (d.entityTip.show) {
+
+            this.addEntityTip()
+
+        }
 
 
-        // primitive
+        /*
+        // primitive 弃用
+        // primitive 的材质透明效果不好，重叠会错乱
+        // primitive.modelMatrix 只支持3d模式
         let instance = new Cesium.GeometryInstance({
             geometry: new Cesium.BoxGeometry({
                 maximum: new Cesium.Cartesian3(1, 1, 1),
@@ -438,22 +471,26 @@ top: -60px;
             geometryInstances: instance,
             appearance: new Cesium.MaterialAppearance({
                 material: Cesium.Material.fromType('Image', {
-                    image: '/image/flag_cn.png'
+                    image: '/image/ship.png'
                 }),
                 flat: true,
                 faceForward: true,
             }),
             modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(114, 20))
         }));
-
+        // 位置
         primitive.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
             Cesium.Cartesian3.fromDegrees(114 + Math.random()*3, 20 + Math.random()*3))
+        // 缩放
         Cesium.Matrix4.multiplyByScale(primitive.modelMatrix, new Cesium.Cartesian3(100000,100000,1), primitive.modelMatrix)
         this.primitive = primitive
+        */
 
     }
 
-    addEntityTip(d) {
+    addEntityTip() {
+
+        let d = this.__data
 
         const options = {
             id: uuid(),
@@ -461,7 +498,7 @@ top: -60px;
             position: Cesium.Cartesian3.fromDegrees(...d.position),
 
             label: {
-                text: d.id,
+                text: d.entityTip.defaultValue,
                 pixelOffset: new Cesium.Cartesian2(0, 50),
                 scale: 0.8,
 
@@ -478,7 +515,7 @@ top: -60px;
                 pixelOffset: new Cesium.Cartesian2(0, 25),
                 rotation: 0,
 
-                image: '/image/flag_cn.png',
+                image: '/image/line.png',
                 color: Cesium.Color.RED,
                 width: 1,
                 height: 50,
@@ -529,6 +566,40 @@ top: -60px;
             }
 
         }
+
+    }
+
+    rotateIcon2(course, r = false) {
+
+        if (!this.entity) { return }
+
+        this.entity.ellipse.stRotation = course * Math.PI / 180
+
+        if (r) { this.world.timerRender() }
+
+    }
+    update2(d, r = false) {
+
+        let { longitude, latitude, altitude, course } = d
+
+        // 更新位置
+        if (longitude && latitude) {
+
+            this.__data.position = [longitude, latitude, altitude || 0]
+
+            this.entity.position = Cesium.Cartesian3.fromDegrees(...this.__data.position)
+            this.entityTip.position = Cesium.Cartesian3.fromDegrees(...this.__data.position)
+
+        }
+
+        // 更新旋转
+        if (course) {
+
+            this.rotateIcon2(course)
+
+        }
+
+        if (r) { this.world.timerRender() }
 
     }
     // ===================================
@@ -649,7 +720,7 @@ class BaseObjectHub {
     // ===================================
 
 
-    createObject(n) {
+    createObjects(n) {
         console.time('批量创建object')
 
         for (let i = 0; i < n; i++) {
@@ -661,6 +732,26 @@ class BaseObjectHub {
         }
 
         console.timeEnd('批量创建object')
+    }
+
+    updateObjects(data) {
+        console.time('批量更新object')
+
+        this.indexObjectID.forEach(o => {
+
+            let p = {
+                longitude: o.__data.position[0] + 0.1,
+                latitude: o.__data.position[1],
+                altitude: o.__data.position[2],
+                course: 30,
+            }
+
+            o.update(p)
+            o.update2(p)
+
+        })
+
+        console.timeEnd('批量更新object')
     }
 }
 

@@ -13,9 +13,11 @@ class Demo {
         this.baseObjectHub = new BaseObjectHub()
         this.trackObjectHub = new TrackObjectHub()
 
-        this.baseObjectHub.createObject(5)
+        this.baseObjectHub.createObjects(5)
 
         this.world.timerRender(3000)
+
+
 
     }
 

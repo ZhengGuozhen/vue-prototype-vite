@@ -61,7 +61,11 @@ class Resource {
 
         if (!this.material[url]) {
             console.warn('new Material', url)
-            this.material[url] = new THREE.MeshBasicMaterial({ map: this.texture[url] })
+            this.material[url] = new THREE.MeshBasicMaterial({
+                map: this.texture[url],
+                transparent: true,
+                depthTest: false,
+            })
         }
 
         return this.material[url]

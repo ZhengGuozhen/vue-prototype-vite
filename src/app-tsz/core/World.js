@@ -316,7 +316,7 @@ class World {
 
             let pickedPrimitive = this.cesium.viewer.scene.pick(e.position);
             let pickedEntity = (Cesium.defined(pickedPrimitive)) ? pickedPrimitive.id : undefined;
-            
+
             if (Cesium.defined(pickedEntity) &&
                 Cesium.defined(pickedEntity.label) &&
                 pickedEntity.__tag === 'EntityTip'
