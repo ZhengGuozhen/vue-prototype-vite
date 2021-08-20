@@ -401,9 +401,6 @@ top: -60px;
 
     addRootEntity(d) {
 
-        // todo
-        // 使用 Primitive 绘制 fixed 对象
-
         const options = {
             id: uuid(),
             name: d.id,
@@ -428,6 +425,32 @@ top: -60px;
         // 
         this.entity.__rootParent = this
         this.entity.__tag = 'RootEntity'
+
+
+        // primitive
+        let instance = new Cesium.GeometryInstance({
+            geometry: new Cesium.BoxGeometry({
+                maximum: new Cesium.Cartesian3(1, 1, 1),
+                minimum: new Cesium.Cartesian3(-1, -1, -1)
+            })
+        });
+        let primitive = this.cesium.viewer.scene.primitives.add(new Cesium.Primitive({
+            geometryInstances: instance,
+            appearance: new Cesium.MaterialAppearance({
+                material: Cesium.Material.fromType('Image', {
+                    image: '/image/flag_cn.png'
+                }),
+                flat: true,
+                faceForward: true,
+            }),
+            modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(114, 20))
+        }));
+
+        primitive.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
+            Cesium.Cartesian3.fromDegrees(114 + Math.random()*3, 20 + Math.random()*3))
+        Cesium.Matrix4.multiplyByScale(primitive.modelMatrix, new Cesium.Cartesian3(100000,100000,1), primitive.modelMatrix)
+        this.primitive = primitive
+
     }
 
     addEntityTip(d) {
