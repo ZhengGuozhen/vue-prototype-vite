@@ -18,7 +18,7 @@ class BaseObjectData {
 
         this.icon = {
             show: true,
-            url: '/image/ship.png',
+            url: './image/ship.png',
             rotation: 0
         }
 
@@ -472,7 +472,7 @@ top: -60px;
             geometryInstances: instance,
             appearance: new Cesium.MaterialAppearance({
                 material: Cesium.Material.fromType('Image', {
-                    image: '/image/ship.png'
+                    image: './image/ship.png'
                 }),
                 flat: true,
                 faceForward: true,
@@ -516,7 +516,7 @@ top: -60px;
                 pixelOffset: new Cesium.Cartesian2(0, 25),
                 rotation: 0,
 
-                image: '/image/line.png',
+                image: './image/line.png',
                 color: Cesium.Color.RED,
                 width: 1,
                 height: 50,
