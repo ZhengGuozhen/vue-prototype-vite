@@ -35,7 +35,7 @@ import { defineComponent, onMounted, onUnmounted, reactive, ref } from 'vue'
 // produciton  情况下：无此问题
 import '@/../node_modules/cesium/Build/Cesium/Widgets/widgets.css'
 
-import Demo from './examples/Demo.js'
+import Demo from './lib/examples/Demo.js'
 
 export default defineComponent({
   name: 'TSZ',
