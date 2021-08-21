@@ -106,7 +106,7 @@ class BaseObject {
             this.icon.__rootParent = this
 
             // 默认旋转
-            this.rotateIcon(d.icon.rotation)
+            this._rotateIcon(d.icon.rotation)
         }
 
         // tip
@@ -353,7 +353,7 @@ top: -60px;
         if (r) { this.world.timerRender() }
     }
 
-    restore(r = false) {
+    _restore(r = false) {
         if (this.hub) {
             this.hub.rootGroup.add(this.mesh)
         } else {
@@ -361,9 +361,11 @@ top: -60px;
         }
         this.restoreCssTip()
 
+        this.resizeToFixedSize()
+
         if (r) { this.world.timerRender() }
     }
-    remove(r = false) {
+    _remove(r = false) {
         if (this.mesh.parent) {
             this.mesh.parent.remove(this.mesh)
             this.removeCssTip()
@@ -371,8 +373,7 @@ top: -60px;
             if (r) { this.world.timerRender() }
         }
     }
-
-    rotateIcon(course, r = false) {
+    _rotateIcon(course, r = false) {
 
         if (!this.icon) { return }
 
@@ -381,7 +382,7 @@ top: -60px;
         if (r) { this.world.timerRender() }
 
     }
-    update(d, r = false) {
+    _update(d, r = false) {
 
         let { longitude, latitude, altitude, course } = d
 
@@ -397,7 +398,7 @@ top: -60px;
         // 更新旋转
         if (course) {
 
-            this.rotateIcon(course)
+            this._rotateIcon(course)
 
         }
 
@@ -446,7 +447,7 @@ top: -60px;
             this.entity.__tag = 'EntityMain'
 
             // 默认旋转
-            this.rotateIcon2(d.icon.rotation)
+            this._rotateIcon2(d.icon.rotation)
 
         }
 
@@ -569,16 +570,22 @@ top: -60px;
 
     }
 
-    rotateIcon2(course, r = false) {
+    _restore2() {
+        this.entity.show = true
+        this.entityTip.show = true
+    }
+    _remove2() {
+        this.entity.show = false
+        this.entityTip.show = false
+    }
+    _rotateIcon2(course) {
 
         if (!this.entity) { return }
 
         this.entity.ellipse.stRotation = course * Math.PI / 180
 
-        if (r) { this.world.timerRender() }
-
     }
-    update2(d, r = false) {
+    _update2(d) {
 
         let { longitude, latitude, altitude, course } = d
 
@@ -595,12 +602,58 @@ top: -60px;
         // 更新旋转
         if (course) {
 
-            this.rotateIcon2(course)
+            this._rotateIcon2(course)
 
         }
 
-        if (r) { this.world.timerRender() }
+    }
+    // ===================================
 
+    // public
+    // ===================================
+    restore(r = false) {
+        
+        if (this.mesh) {
+            this._restore(r)
+        }
+
+        if (this.entity) {
+            this._restore2()
+        }
+
+    }
+    remove(r = false) {
+
+        if (this.mesh) {
+            this._remove(r)
+        }
+
+        if (this.entity) {
+            this._remove2()
+        }
+
+    }
+    rotateIcon(course, r = false) {
+       
+        if (this.mesh) {
+            this._rotateIcon(course, r)
+        }
+
+        if (this.entity) {
+            this._rotateIcon2(course)
+        }
+       
+    }
+    update(d, r = false) {
+        
+        if (this.mesh) {
+            this._update(d, r)
+        }
+
+        if (this.entity) {
+            this._update2(d)
+        }
+       
     }
     // ===================================
 
@@ -650,6 +703,10 @@ class BaseObjectHub {
 
     getObjectByID(id) {
         return this.indexObjectID.get(id)
+    }
+
+    getObjectAll() {
+        return [...this.indexObjectID.values()]
     }
 
     removeAll() {
@@ -747,7 +804,6 @@ class BaseObjectHub {
             }
 
             o.update(p)
-            o.update2(p)
 
         })
 

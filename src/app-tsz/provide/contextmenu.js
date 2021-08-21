@@ -1,10 +1,10 @@
-const main = {
+export const contextMenuCommon = {
     show: false,
     position: {},
     intersectObject: null,
     options: [],
 }
-const optionsWorld = [
+export const optionsWorld = [
     {
         label: '3D/2D',
         action: (o) => {
@@ -43,9 +43,9 @@ const optionsWorld = [
                 o.world.timerRender(100)
             }, 500)
         },
-    },
+    }
 ]
-const optionsBaseObject = [
+export const optionsBaseObject = [
     {
         label: 'Tip显隐',
         action: (o) => {
@@ -84,5 +84,3 @@ const optionsBaseObject = [
         },
     },
 ]
-
-export { main, optionsWorld, optionsBaseObject }

@@ -14,33 +14,38 @@ import { global } from './global.js'
 // lib
 import Demo from './lib/examples/Demo.js'
 // 组件 & provide
-import * as ContextMenuData from './provide/contextmenu.js'
+import * as ContextMenuData from './provide/contextMenu.js'
 import ContextMenu from './ui/ContextMenu.vue'
+import * as FilterData from './provide/filter.js'
+import Filter from './ui/Filter.vue'
 
 const rootContainer = ref(null)
-let tsz = null
+let tsInstance = null
+let tsInstanceOk = ref(false)
 
-// const contextMenuData = contextMenuWorld
-const contextMenuData = reactive(ContextMenuData.main)
-provide('contextMenuData', contextMenuData)
+const contextMenuCommon = reactive(ContextMenuData.contextMenuCommon)
+provide('contextMenuCommon', contextMenuCommon)
+
+const filterBaseObject = reactive(FilterData.filterBaseObject)
+provide('filterBaseObject', filterBaseObject)
 
 onMounted(() => {
     const el = rootContainer.value
-    tsz = new Demo(el)
+    tsInstance = new Demo(el)
+    global.tsInstance = tsInstance
+    tsInstanceOk.value = true
 
-    tsz.world.addScreenSpaceEventHandler((e) => {
+    tsInstance.world.addScreenSpaceEventHandler((e) => {
         onWorldClickLeft(e)
-    }, tsz.world.ScreenSpaceEventType.LEFT_CLICK)
+    }, tsInstance.world.ScreenSpaceEventType.LEFT_CLICK)
 
-    tsz.world.addScreenSpaceEventHandler((e) => {
+    tsInstance.world.addScreenSpaceEventHandler((e) => {
         onWorldClickRight(e)
-    }, tsz.world.ScreenSpaceEventType.RIGHT_CLICK)
-
-    global.tsz = tsz
+    }, tsInstance.world.ScreenSpaceEventType.RIGHT_CLICK)
 })
 
 onUnmounted(() => {
-    tsz.dispose()
+    tsInstance.dispose()
 })
 
 const onWorldClickLeft = (e) => {
@@ -52,31 +57,39 @@ const onWorldClickRight = (e) => {
 }
 
 function showContextMenu(position) {
-    let r1 = tsz.baseObjectHub.pick(position.x, position.y)
-    let r2 = tsz.baseObjectHub.pick2(position.x, position.y)
+    let r1 = tsInstance.baseObjectHub.pick(position.x, position.y)
+    let r2 = tsInstance.baseObjectHub.pick2(position.x, position.y)
     let all = [...r1, ...r2]
 
-    contextMenuData.show = true
-    contextMenuData.position = { x: position.x, y: position.y }
+    contextMenuCommon.show = true
+    contextMenuCommon.position = { x: position.x, y: position.y }
 
     if (all.length > 0) {
-        contextMenuData.intersectObject = all[0]
-        contextMenuData.options = ContextMenuData.optionsBaseObject
+        contextMenuCommon.intersectObject = all[0]
+        contextMenuCommon.options = ContextMenuData.optionsBaseObject
     } else {
-        contextMenuData.intersectObject = tsz
-        contextMenuData.options = ContextMenuData.optionsWorld
+        contextMenuCommon.intersectObject = tsInstance
+        contextMenuCommon.options = ContextMenuData.optionsWorld
     }
 }
 function hideContextMenu() {
-    contextMenuData.show = false
+    contextMenuCommon.show = false
 }
 </script>
 
 <template>
-    <div class="w-h-screen">
-        <div ref="rootContainer" class="absolute w-h-screen overflow-hidden"></div>
+    <div class="w-h-screen overflow-hidden">
+        <div ref="rootContainer" class="absolute w-h-screen"></div>
 
+        <!-- 公用组件，动态数据 -->
         <ContextMenu :style="{ zIndex: 9999 }" />
+        <!-- 独立组件，专用数据 -->
+        <Filter v-if="tsInstanceOk" data="filterBaseObject" :style="{ zIndex: 9999 }" />
+
+        <!-- test -->
+        <div class="absolute bottom-0 flex text-white cursor-pointer">
+            <div class="border-d" @click="filterBaseObject.show = !filterBaseObject.show">FilterBaseObject</div>
+        </div>
     </div>
 </template>
 

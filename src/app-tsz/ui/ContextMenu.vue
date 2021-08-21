@@ -2,7 +2,7 @@
 import { onMounted, onUnmounted, inject } from 'vue'
 
 // 当使用响应式提供/注入值时，建议尽可能，在提供者内保持响应式 property 的任何更改
-const data = inject('contextMenuData')
+const data = inject('contextMenuCommon')
 
 onMounted(() => {
     console.warn('onMounted ContextMenu')

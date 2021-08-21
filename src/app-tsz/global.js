@@ -1,5 +1,3 @@
-const global = {
-    tsz: null
+export const global = {
+    tsInstance: null
 }
-
-export { global }

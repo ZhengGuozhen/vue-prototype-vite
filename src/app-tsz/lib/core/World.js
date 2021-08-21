@@ -433,6 +433,7 @@ class World {
         console.log('onWindowResize', width, width)
 
         this.three.camera.aspect = aspect
+        this.three.camera.fov = Cesium.Math.toDegrees(this.cesium.viewer.camera.frustum.fovy)
         this.three.camera.updateProjectionMatrix()
 
         this.three.renderer.setSize(width, height)

@@ -17,8 +17,6 @@ class Demo {
 
         this.world.timerRender(3000)
 
-
-
     }
 
     dispose() {
