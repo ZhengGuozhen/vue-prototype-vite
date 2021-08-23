@@ -439,6 +439,18 @@ top: -60px;
                     outlineWidth: 2.0,
                     stRotation: 0
                 },
+
+                // 无法旋转
+                // box: {
+                //     dimensions: new Cesium.Cartesian3(1000000, 1000000, 1),
+                //     material: new Cesium.ImageMaterialProperty({
+                //         image: d.icon.url,
+                //         transparent: true,
+                //     }),
+                //     outline: true,
+                //     outlineColor: Cesium.Color.YELLOW,
+                //     outlineWidth: 2.0,
+                // }
             })
             this.cesium.viewer.entities.add(this.entity);
 
@@ -507,9 +519,10 @@ top: -60px;
                 fillColor: Cesium.Color.WHITE,
                 outlineColor: Cesium.Color.BLACK,
                 outlineWidth: 2,
-                showBackground: true,
-                backgroundColor: Cesium.Color.BLACK.withAlpha(0.1),
-                backgroundPadding: new Cesium.Cartesian2(8, 4),
+                // 完全透明，需要点击到文字上触发交互
+                // showBackground: true,
+                // backgroundColor: Cesium.Color.BLACK.withAlpha(0.1),
+                // backgroundPadding: new Cesium.Cartesian2(8, 4),
                 disableDepthTestDistance: Number.POSITIVE_INFINITY,
             },
             billboard: {
