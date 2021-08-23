@@ -552,8 +552,8 @@ top: -60px;
                 let distance = Cesium.Plane.getPointDistance(cameraPlane, pos)
                 let scale = distance * factor;
 
-                o.semiMinorAxis = scale
-                o.semiMajorAxis = scale
+                o.semiMinorAxis.setValue(scale)
+                o.semiMajorAxis.setValue(scale)
 
             } else if (mode === Cesium.SceneMode.COLUMBUS_VIEW) {
 
@@ -561,8 +561,8 @@ top: -60px;
                 let cameraHeight = this.cesium.viewer.camera.positionCartographic.height
                 let scale = cameraHeight * factor;
 
-                o.semiMinorAxis = scale
-                o.semiMajorAxis = scale
+                o.semiMinorAxis.setValue(scale)
+                o.semiMajorAxis.setValue(scale)
 
             }
 
@@ -582,7 +582,7 @@ top: -60px;
 
         if (!this.entity) { return }
 
-        this.entity.ellipse.stRotation = course * Math.PI / 180
+        this.entity.ellipse.stRotation.setValue(course * Math.PI / 180)
 
     }
     _update2(d) {
@@ -594,8 +594,8 @@ top: -60px;
 
             this.__data.position = [longitude, latitude, altitude || 0]
 
-            this.entity.position = Cesium.Cartesian3.fromDegrees(...this.__data.position)
-            this.entityTip.position = Cesium.Cartesian3.fromDegrees(...this.__data.position)
+            this.entity.position.setValue(Cesium.Cartesian3.fromDegrees(...this.__data.position))
+            this.entityTip.position.setValue(Cesium.Cartesian3.fromDegrees(...this.__data.position))
 
         }
 
@@ -612,7 +612,7 @@ top: -60px;
     // public
     // ===================================
     restore(r = false) {
-        
+
         if (this.mesh) {
             this._restore(r)
         }
@@ -634,7 +634,7 @@ top: -60px;
 
     }
     rotateIcon(course, r = false) {
-       
+
         if (this.mesh) {
             this._rotateIcon(course, r)
         }
@@ -642,10 +642,10 @@ top: -60px;
         if (this.entity) {
             this._rotateIcon2(course)
         }
-       
+
     }
     update(d, r = false) {
-        
+
         if (this.mesh) {
             this._update(d, r)
         }
@@ -653,7 +653,7 @@ top: -60px;
         if (this.entity) {
             this._update2(d)
         }
-       
+
     }
     // ===================================
 

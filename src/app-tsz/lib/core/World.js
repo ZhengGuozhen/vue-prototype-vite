@@ -346,12 +346,12 @@ class World {
                 if (pLabel.x > 0) { connAngle = - connAngle }
 
                 // 更新 tip 位置
-                __cache__pickedEntity.label.pixelOffset = pLabel
+                __cache__pickedEntity.label.pixelOffset.setValue(pLabel)
 
                 // 更新连接线
-                __cache__pickedEntity.billboard.pixelOffset = pBillboard
-                __cache__pickedEntity.billboard.height = connLength
-                __cache__pickedEntity.billboard.rotation = connAngle
+                __cache__pickedEntity.billboard.pixelOffset.setValue(pBillboard)
+                __cache__pickedEntity.billboard.height.setValue(connLength)
+                __cache__pickedEntity.billboard.rotation.setValue(connAngle)
 
             }
 
